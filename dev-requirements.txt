@@ -17,7 +17,7 @@ freezegun>=1.5.1
 hypothesis
 ipdb
 # isort must match what's in .pre-commit-config.yaml to be sure local env matches CI
-isort==5.13.2
+isort==7.0.0
 # mypy must match what's in .pre-commit-config.yaml to be sure local env matches CI
 mypy==1.4.1
 pip-tools
