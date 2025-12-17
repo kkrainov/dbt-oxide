@@ -19,7 +19,7 @@ ipdb
 # isort must match what's in .pre-commit-config.yaml to be sure local env matches CI
 isort==5.13.2
 # mypy must match what's in .pre-commit-config.yaml to be sure local env matches CI
-mypy==1.4.1
+mypy==1.19.1
 pip-tools
 pre-commit
 protobuf>=6.0,<7.0
