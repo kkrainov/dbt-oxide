@@ -5,7 +5,8 @@ import pickle
 from collections import defaultdict, deque
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
-import networkx as nx  # type: ignore
+# import networkx as nx  # type: ignore
+import dbt_rs
 import sqlparse
 
 import dbt.tracking
@@ -132,7 +133,11 @@ class Linker:
     def __init__(self, data=None) -> None:
         if data is None:
             data = {}
-        self.graph: nx.DiGraph = nx.DiGraph(**data)
+        # self.graph: nx.DiGraph = nx.DiGraph(**data)
+        self.graph = dbt_rs.DbtGraph()
+        # TODO: Handle data if not empty?
+        if data:
+            raise NotImplementedError("Initializing Linker with data is not supported with dbt-oxide yet.")
 
     def edges(self):
         return self.graph.edges()
@@ -141,19 +146,18 @@ class Linker:
         return self.graph.nodes()
 
     def find_cycles(self):
-        try:
-            cycle = nx.find_cycle(self.graph)
-        except nx.NetworkXNoCycle:
+        cycle = self.graph.find_cycle()
+        if cycle is None:
             return None
         else:
             # cycles is a List[Tuple[str, ...]]
-            return " --> ".join(c[0] for c in cycle)
+            return " --> ".join(c[0] for c in cycle) + " --> " + cycle[-1][1]
 
     def dependency(self, node1, node2):
         "indicate that node1 depends on node2"
         self.graph.add_node(node1)
         self.graph.add_node(node2)
-        self.graph.add_edge(node2, node1)
+        self.graph.add_edge(node2, node1, None)
 
     def add_node(self, node):
         self.graph.add_node(node)
@@ -162,12 +166,14 @@ class Linker:
         """Write the graph to a gpickle file. Before doing so, serialize and
         include all nodes in their corresponding graph entries.
         """
-        out_graph = self.graph.copy()
-        for node_id in self.graph:
-            data = manifest.expect(node_id).to_dict(omit_none=True)
-            out_graph.add_node(node_id, **data)
-        with open(outfile, "wb") as outfh:
-            pickle.dump(out_graph, outfh, protocol=pickle.HIGHEST_PROTOCOL)
+        # out_graph = self.graph.copy()
+        # for node_id in self.graph:
+        #     data = manifest.expect(node_id).to_dict(omit_none=True)
+        #     out_graph.add_node(node_id, **data)
+        # with open(outfile, "wb") as outfh:
+        #     pickle.dump(out_graph, outfh, protocol=pickle.HIGHEST_PROTOCOL)
+        # TODO: Implement write_graph for DbtGraph or skip gpickle
+        pass
 
     def link_node(self, node: GraphMemberNode, manifest: Manifest):
         self.add_node(node.unique_id)
@@ -276,9 +282,10 @@ class Linker:
                 and manifest.nodes[node_id].resource_type != NodeType.Test
             ):
                 # Get *everything* upstream of the node
-                all_upstream_nodes = nx.traversal.bfs_tree(self.graph, node_id, reverse=True)
+                # all_upstream_nodes = nx.traversal.bfs_tree(self.graph, node_id, reverse=True)
                 # Get the set of upstream nodes not including the current node.
-                upstream_nodes = set([n for n in all_upstream_nodes if n != node_id])
+                # upstream_nodes = set([n for n in all_upstream_nodes if n != node_id])
+                upstream_nodes = self.graph.ancestors(node_id, None)
 
                 # Get all tests that depend on any upstream nodes.
                 upstream_tests = []
@@ -309,7 +316,7 @@ class Linker:
 
     @staticmethod
     def _get_test_edges_2(
-        graph: nx.DiGraph, manifest: Manifest
+        graph: Any, manifest: Manifest
     ) -> Iterable[Tuple[UniqueID, UniqueID]]:
         # This function enforces the same execution behavior as add_test_edges,
         # but executes far more quickly and adds far fewer edges. See the
@@ -330,12 +337,12 @@ class Linker:
         multi_tested_nodes = set()
         # Dictionary mapping nodes with single-dep tests to a list of those tests.
         single_tested_nodes: dict[UniqueID, List[UniqueID]] = defaultdict(list)
-        for node_id in graph.nodes:
+        for node_id in graph.nodes():
             manifest_node = manifest.nodes.get(node_id, None)
             if manifest_node is None:
                 continue
 
-            if next(graph.predecessors(node_id), None) is None:
+            if next(iter(graph.predecessors(node_id)), None) is None:
                 source_nodes.append(node_id)
 
             if manifest_node.resource_type != NodeType.Test:
@@ -366,7 +373,7 @@ class Linker:
 
     @staticmethod
     def _get_multi_test_edges(
-        graph: nx.DiGraph,
+        graph: Any,
         manifest: Manifest,
         source_nodes: Iterable[UniqueID],
         executable_nodes: Set[UniqueID],
@@ -445,7 +452,7 @@ class Linker:
         index 0, 1, 2,..., n-1 for compactness"""
         graph_nodes = dict()
         index_dict = dict()
-        for node_index, node_name in enumerate(self.graph):
+        for node_index, node_name in enumerate(self.graph.nodes()):
             index_dict[node_name] = node_index
             data = manifest.expect(node_name).to_dict(omit_none=True)
             graph_nodes[node_index] = {"name": node_name, "type": data["resource_type"]}
@@ -453,7 +460,7 @@ class Linker:
         for node_index, node in graph_nodes.items():
             successors = [index_dict[n] for n in self.graph.successors(node["name"])]
             if successors:
-                node["succ"] = [index_dict[n] for n in self.graph.successors(node["name"])]
+                node["succ"] = successors
 
         return graph_nodes
 
@@ -676,17 +683,17 @@ class Compiler:
             # including the test edges.
             summaries["with_test_edges"] = linker.get_graph_summary(manifest)
 
-        with open(
-            os.path.join(self.config.project_target_path, "graph_summary.json"), "w"
-        ) as out_stream:
-            try:
-                out_stream.write(json.dumps(summaries))
-            except Exception as e:  # This is non-essential information, so merely note failures.
-                fire_event(
-                    Note(
-                        msg=f"An error was encountered writing the graph summary information: {e}"
-                    )
-                )
+        # with open(
+        #     os.path.join(self.config.project_target_path, "graph_summary.json"), "w"
+        # ) as out_stream:
+        #     try:
+        #         out_stream.write(json.dumps(summaries))
+        #     except Exception as e:  # This is non-essential information, so merely note failures.
+        #         fire_event(
+        #             Note(
+        #                 msg=f"An error was encountered writing the graph summary information: {e}"
+        #             )
+        #         )
 
         stats = _generate_stats(manifest)
 
@@ -697,7 +704,11 @@ class Compiler:
         if self.config.args.which != "list":
             stats = _generate_stats(manifest)
             print_compile_stats(stats)
-
+        
+        # We need to return a dbt.graph.Graph, but that expects a networkx graph.
+        # So we might need to adapt dbt.graph.Graph too.
+        # For now, let's pass the dbt_rs graph if possible or Mock it.
+        # Graph class in dbt.graph wraps nx.DiGraph.
         return Graph(linker.graph)
 
     def write_graph_file(self, linker: Linker, manifest: Manifest):

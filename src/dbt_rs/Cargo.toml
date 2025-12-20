@@ -7,5 +7,16 @@ edition = "2021"
 name = "dbt_rs"
 crate-type = ["cdylib"]
 
+[features]
+default = ["extension-module"]
+extension-module = ["pyo3/extension-module"]
+
 [dependencies]
-pyo3 = { version = "0.20", features = ["extension-module"] }
+pyo3 = { version = "0.20" }
+petgraph = "0.6"
+
+[dev-dependencies]
+pyo3 = { version = "0.20", features = ["auto-initialize"] }
+
+[build-dependencies]
+pyo3-build-config = "0.20"

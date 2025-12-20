@@ -1,8 +1,8 @@
 import string
 from unittest import mock
 
-import networkx as nx
 import pytest
+import dbt_rs
 
 import dbt.graph.cli as graph_cli
 import dbt.graph.selector as graph_selector
@@ -11,15 +11,34 @@ from dbt.node_types import NodeType
 
 
 def _get_graph():
-    integer_graph = nx.balanced_tree(2, 2, nx.DiGraph())
+    graph = graph_selector.Graph(dbt_rs.DbtGraph())
 
-    package_mapping = {
-        i: "m." + ("X" if i % 2 == 0 else "Y") + "." + letter
-        for (i, letter) in enumerate(string.ascii_lowercase)
-    }
+    nodes = [
+        "m.X.a",
+        "m.Y.b",
+        "m.X.c",
+        "m.Y.d",
+        "m.X.e",
+        "m.Y.f",
+        "m.X.g",
+    ]
 
-    # Edges: [(X.a, Y.b), (X.a, X.c), (Y.b, Y.d), (Y.b, X.e), (X.c, Y.f), (X.c, X.g)]
-    return graph_selector.Graph(nx.relabel_nodes(integer_graph, package_mapping))
+    for node in nodes:
+        graph.add_node(node)
+
+    edges = [
+        (nodes[0], nodes[1]),
+        (nodes[0], nodes[2]),
+        (nodes[1], nodes[3]),
+        (nodes[1], nodes[4]),
+        (nodes[2], nodes[5]),
+        (nodes[2], nodes[6]),
+    ]
+
+    for u, v in edges:
+        graph.add_edge(u, v)
+
+    return graph
 
 
 def _get_manifest(graph):
