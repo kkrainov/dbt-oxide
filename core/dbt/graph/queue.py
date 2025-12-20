@@ -2,7 +2,7 @@ import threading
 from queue import PriorityQueue
 from typing import Dict, Generator, List, Optional, Set
 
-import networkx as nx  # type: ignore
+import dbt_rs
 
 from dbt.contracts.graph.manifest import Manifest
 from dbt.contracts.graph.nodes import (
@@ -13,7 +13,7 @@ from dbt.contracts.graph.nodes import (
 )
 from dbt.node_types import NodeType
 
-from .graph import UniqueId
+from .graph import Graph, UniqueId
 
 
 class GraphQueue:
@@ -27,15 +27,22 @@ class GraphQueue:
 
     def __init__(
         self,
-        graph: nx.DiGraph,
+        graph: Graph,
         manifest: Manifest,
         selected: Set[UniqueId],
         preserve_edges: bool = True,
     ) -> None:
-        # 'create_empty_copy' returns a copy of the graph G with all of the edges removed, and leaves nodes intact.
-        self.graph = graph if preserve_edges else nx.classes.function.create_empty_copy(graph)
         self.manifest = manifest
         self._selected = selected
+
+        # Handle Graph Wrapper
+        if preserve_edges:
+            self.graph = graph
+        else:
+            self.graph = Graph(dbt_rs.DbtGraph())
+            for node in graph.nodes():
+                self.graph.add_node(node)
+
         # store the queue as a priority queue.
         self.inner: PriorityQueue = PriorityQueue()
         # things that have been popped off the queue but not finished
@@ -65,36 +72,7 @@ class GraphQueue:
             return False
         return True
 
-    @staticmethod
-    def _grouped_topological_sort(
-        graph: nx.DiGraph,
-    ) -> Generator[List[str], None, None]:
-        """Topological sort of given graph that groups ties.
-
-        Adapted from `nx.topological_sort`, this function returns a topo sort of a graph however
-        instead of arbitrarily ordering ties in the sort order, ties are grouped together in
-        lists.
-
-        Args:
-            graph: The graph to be sorted.
-
-        Returns:
-            A generator that yields lists of nodes, one list per graph depth level.
-        """
-        indegree_map = {v: d for v, d in graph.in_degree() if d > 0}
-        zero_indegree = [v for v, d in graph.in_degree() if d == 0]
-
-        while zero_indegree:
-            yield zero_indegree
-            new_zero_indegree = []
-            for v in zero_indegree:
-                for _, child in graph.edges(v):
-                    indegree_map[child] -= 1
-                    if not indegree_map[child]:
-                        new_zero_indegree.append(child)
-            zero_indegree = new_zero_indegree
-
-    def _get_scores(self, graph: nx.DiGraph) -> Dict[str, int]:
+    def _get_scores(self, graph: Graph) -> Dict[str, int]:
         """Scoring nodes for processing order.
 
         Scores are calculated by the graph depth level. Lowest score (0) should be processed first.
@@ -105,20 +83,17 @@ class GraphQueue:
         Returns:
             A dictionary consisting of `node name`:`score` pairs.
         """
-        # split graph by connected subgraphs
-        subgraphs = (graph.subgraph(x) for x in nx.connected_components(nx.Graph(graph)))
+        grouped_nodes = graph.topological_sort_grouped()
 
-        # score all nodes in all subgraphs
         scores = {}
-        for subgraph in subgraphs:
-            grouped_nodes = self._grouped_topological_sort(subgraph)
-            for level, group in enumerate(grouped_nodes):
-                for node in group:
-                    scores[node] = level
-
+        for level, group in enumerate(grouped_nodes):
+            for node in group:
+                scores[node] = level
         return scores
 
-    def get(self, block: bool = True, timeout: Optional[float] = None) -> GraphMemberNode:
+    def get(
+        self, block: bool = True, timeout: Optional[float] = None
+    ) -> GraphMemberNode:
         """Get a node off the inner priority queue. By default, this blocks.
 
         This takes the lock, but only for part of it.
