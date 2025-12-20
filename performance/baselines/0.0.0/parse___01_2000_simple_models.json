@@ -1,0 +1,16 @@
+{
+  "version": "0.0.0",
+  "metric": { "name": "parse", "project_name": "01_2000_simple_models" },
+  "ts": "2025-12-17T17:29:31.732170Z",
+  "measurement": {
+    "command": "dbt parse --no-version-check --profiles-dir ../../project_config/",
+    "mean": 17.771570312740003,
+    "stddev": 0.0027543583965232796,
+    "median": 17.771570312740003,
+    "user": 16.924956039999998,
+    "system": 1.6233908599999998,
+    "min": 17.769622687240002,
+    "max": 17.77351793824,
+    "times": [17.769622687240002, 17.77351793824]
+  }
+}
