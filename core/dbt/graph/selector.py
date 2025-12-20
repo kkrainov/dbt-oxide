@@ -50,7 +50,9 @@ class NodeSelector(MethodManager):
         # build a subgraph containing only non-empty, enabled nodes and enabled
         # sources.
         graph_members = {
-            unique_id for unique_id in self.full_graph.nodes() if self._is_graph_member(unique_id)
+            unique_id
+            for unique_id in self.full_graph.nodes()
+            if self._is_graph_member(unique_id)
         }
         self.graph = self.full_graph.subgraph(graph_members)
 
@@ -82,7 +84,9 @@ class NodeSelector(MethodManager):
             valid_selectors = ", ".join(self.SELECTOR_METHODS)
             fire_event(
                 SelectorReportInvalidSelector(
-                    valid_selectors=valid_selectors, spec_method=spec.method, raw_spec=spec.raw
+                    valid_selectors=valid_selectors,
+                    spec_method=spec.method,
+                    raw_spec=spec.raw,
                 )
             )
             return set(), set()
@@ -131,7 +135,9 @@ class NodeSelector(MethodManager):
             direct_nodes, indirect_nodes = self.get_nodes_from_criteria(spec)
         else:
             bundles = [
-                self.select_nodes_recursively(spec=component, warn_on_no_nodes=warn_on_no_nodes)
+                self.select_nodes_recursively(
+                    spec=component, warn_on_no_nodes=warn_on_no_nodes
+                )
                 for component in spec.components
             ]
 
@@ -268,12 +274,15 @@ class NodeSelector(MethodManager):
         indirect_nodes = set()
         selected_and_parents = set()
         if indirect_selection == IndirectSelection.Buildable:
-            selected_and_parents = selected.union(self.graph.select_parents(selected)).union(
-                self.manifest.sources
-            )
+            selected_and_parents = selected.union(
+                self.graph.select_parents(selected)
+            ).union(self.manifest.sources)
 
         for unique_id in self.graph.select_successors(selected):
-            if unique_id in self.manifest.nodes or unique_id in self.manifest.unit_tests:
+            if (
+                unique_id in self.manifest.nodes
+                or unique_id in self.manifest.unit_tests
+            ):
                 if unique_id in self.manifest.nodes:
                     node = self.manifest.nodes[unique_id]
                 elif unique_id in self.manifest.unit_tests:
@@ -328,7 +337,9 @@ class NodeSelector(MethodManager):
 
         return selected
 
-    def get_selected(self, spec: SelectionSpec, warn_on_no_nodes: bool = True) -> Set[UniqueId]:
+    def get_selected(
+        self, spec: SelectionSpec, warn_on_no_nodes: bool = True
+    ) -> Set[UniqueId]:
         """get_selected runs through the node selection process:
 
         - node selection. Based on the include/exclude sets, the set
@@ -345,7 +356,9 @@ class NodeSelector(MethodManager):
 
         return filtered_nodes
 
-    def get_graph_queue(self, spec: SelectionSpec, preserve_edges: bool = True) -> GraphQueue:
+    def get_graph_queue(
+        self, spec: SelectionSpec, preserve_edges: bool = True
+    ) -> GraphQueue:
         """Returns a queue over nodes in the graph that tracks progress of
         dependencies.
         """
@@ -356,7 +369,7 @@ class NodeSelector(MethodManager):
         # Construct a new graph using the selected_nodes
         new_graph = self.full_graph.get_subset_graph(selected_nodes)
         # should we give a way here for consumers to mutate the graph?
-        return GraphQueue(new_graph.graph, self.manifest, selected_nodes, preserve_edges)
+        return GraphQueue(new_graph, self.manifest, selected_nodes, preserve_edges)
 
 
 class ResourceTypeSelector(NodeSelector):
