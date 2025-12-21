@@ -50,6 +50,9 @@ Consult these for the "how" when implementing a phase.
 ## Development Protocols
 
 - **Build Tool:** `maturin` is used for building Python wheels from Rust.
+- **Rust Code Quality:** **ALWAYS run these after making Rust code changes:**
+  - `cargo fmt --all` - Format code (CI enforces this)
+  - `cargo clippy --no-default-features -- -D warnings` - Lint code (CI enforces this)
 - **Testing:**
     - Rust: `cargo test --no-default-features` (Tests Pure Rust logic only, bypassing PyO3 linking issues)
     - Python: `uv run pytest`

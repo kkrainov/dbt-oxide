@@ -1,16 +1,19 @@
-use std::collections::{HashMap, HashSet, VecDeque};
-use petgraph::stable_graph::{StableDiGraph, NodeIndex};
-use petgraph::Direction;
+use petgraph::stable_graph::{NodeIndex, StableDiGraph};
 use petgraph::visit::EdgeRef;
+use petgraph::Direction;
+use std::collections::{HashMap, HashSet, VecDeque};
 
+#[cfg_attr(not(feature = "extension-module"), allow(dead_code))]
 const PARENT_TEST_EDGE: &str = "parent_test";
 
+#[cfg_attr(not(feature = "extension-module"), allow(dead_code))]
 #[derive(Clone)]
 pub struct OxideGraph {
     graph: StableDiGraph<String, String>,
     node_map: HashMap<String, NodeIndex>,
 }
 
+#[cfg_attr(not(feature = "extension-module"), allow(dead_code))]
 impl OxideGraph {
     pub fn new() -> Self {
         OxideGraph {
@@ -32,7 +35,12 @@ impl OxideGraph {
         id
     }
 
-    pub fn add_edge(&mut self, source: &str, target: &str, edge_type: Option<String>) -> Result<(), String> {
+    pub fn add_edge(
+        &mut self,
+        source: &str,
+        target: &str,
+        edge_type: Option<String>,
+    ) -> Result<(), String> {
         let source_idx = if let Some(idx) = self.node_map.get(source) {
             *idx
         } else {
@@ -50,15 +58,15 @@ impl OxideGraph {
         };
 
         if let Some(edge) = self.graph.find_edge(source_idx, target_idx) {
-             if let Some(w) = self.graph.edge_weight_mut(edge) {
-                 *w = edge_type.unwrap_or_default();
-             }
+            if let Some(w) = self.graph.edge_weight_mut(edge) {
+                *w = edge_type.unwrap_or_default();
+            }
         } else {
-            self.graph.add_edge(source_idx, target_idx, edge_type.unwrap_or_default());
+            self.graph
+                .add_edge(source_idx, target_idx, edge_type.unwrap_or_default());
         }
         Ok(())
     }
-    
 
     pub fn remove_node(&mut self, node: &str) {
         if let Some(idx) = self.node_map.remove(node) {
@@ -71,7 +79,8 @@ impl OxideGraph {
     }
 
     pub fn edges(&self) -> Vec<(String, String)> {
-        self.graph.edge_indices()
+        self.graph
+            .edge_indices()
             .filter_map(|edge_idx| {
                 let (source_idx, target_idx) = self.graph.edge_endpoints(edge_idx)?;
                 let source = self.graph.node_weight(source_idx)?.clone();
@@ -82,12 +91,14 @@ impl OxideGraph {
     }
 
     pub fn in_degree(&self, node: &str) -> Option<usize> {
-        self.node_map.get(node)
+        self.node_map
+            .get(node)
             .map(|idx| self.graph.edges_directed(*idx, Direction::Incoming).count())
     }
 
     pub fn out_degree(&self, node: &str) -> Option<usize> {
-        self.node_map.get(node)
+        self.node_map
+            .get(node)
             .map(|idx| self.graph.edges_directed(*idx, Direction::Outgoing).count())
     }
 
@@ -110,14 +121,14 @@ impl OxideGraph {
                 // The path contains the DFS traversal. The cycle is the suffix starting from the repeated node.
                 let last = path.last().unwrap();
                 let cycle_start_pos = path.iter().position(|x| x == last).unwrap();
-                
+
                 let mut cycle_edges = Vec::new();
-                for i in cycle_start_pos..path.len()-1 {
+                for i in cycle_start_pos..path.len() - 1 {
                     let u = self.graph.node_weight(path[i]).unwrap().clone();
-                    let v = self.graph.node_weight(path[i+1]).unwrap().clone();
+                    let v = self.graph.node_weight(path[i + 1]).unwrap().clone();
                     cycle_edges.push((u, v));
                 }
-                
+
                 return Some(cycle_edges);
             }
         }
@@ -140,10 +151,10 @@ impl OxideGraph {
                 path.push(neighbor);
                 return true;
             }
-            if !visited.contains(&neighbor) {
-                if self.detect_cycle_dfs(neighbor, visited, recursion_stack, path) {
-                    return true;
-                }
+            if !visited.contains(&neighbor)
+                && self.detect_cycle_dfs(neighbor, visited, recursion_stack, path)
+            {
+                return true;
             }
         }
 
@@ -160,10 +171,13 @@ impl OxideGraph {
                 new_graph.add_node(node.clone());
             }
         }
-        
+
         for edge_idx in self.graph.edge_indices() {
             if let Some((source_idx, target_idx)) = self.graph.edge_endpoints(edge_idx) {
-                if let (Some(source), Some(target)) = (self.graph.node_weight(source_idx), self.graph.node_weight(target_idx)) {
+                if let (Some(source), Some(target)) = (
+                    self.graph.node_weight(source_idx),
+                    self.graph.node_weight(target_idx),
+                ) {
                     if nodes.contains(source) && nodes.contains(target) {
                         if let Some(weight) = self.graph.edge_weight(edge_idx) {
                             let _ = new_graph.add_edge(source, target, Some(weight.clone()));
@@ -177,23 +191,25 @@ impl OxideGraph {
 
     pub fn get_subset_graph(&self, nodes: &HashSet<String>) -> OxideGraph {
         let mut new_graph = self.clone();
-        
+
         let all_nodes: HashSet<String> = self.nodes();
         let to_remove: Vec<String> = all_nodes.difference(nodes).cloned().collect();
-        
+
         for node in to_remove {
             let preds: Vec<String> = new_graph.predecessors(&node).into_iter().collect();
             let succs: Vec<String> = new_graph.successors(&node).into_iter().collect();
-            
+
             for p in &preds {
                 for s in &succs {
-                    if p == s { continue; }
+                    if p == s {
+                        continue;
+                    }
                     let _ = new_graph.add_edge(p, s, None);
                 }
             }
             new_graph.remove_node(&node);
         }
-        
+
         new_graph
     }
 
@@ -212,15 +228,15 @@ impl OxideGraph {
         }
         result
     }
-    
+
     pub fn edge_count(&self) -> usize {
         self.graph.edge_count()
     }
-    
+
     pub fn node_count(&self) -> usize {
         self.graph.node_count()
     }
-    
+
     pub fn get_edge_weight(&self, source: &str, target: &str) -> Option<&String> {
         let s = self.node_map.get(source)?;
         let t = self.node_map.get(target)?;
@@ -236,15 +252,28 @@ impl OxideGraph {
         self.bfs_traversal(node, Direction::Incoming, limit)
     }
 
-    pub fn select_children(&self, selected: &HashSet<String>, limit: Option<usize>) -> HashSet<String> {
+    pub fn select_children(
+        &self,
+        selected: &HashSet<String>,
+        limit: Option<usize>,
+    ) -> HashSet<String> {
         self.select_neighbors(selected, Direction::Outgoing, limit)
     }
 
-    pub fn select_parents(&self, selected: &HashSet<String>, limit: Option<usize>) -> HashSet<String> {
+    pub fn select_parents(
+        &self,
+        selected: &HashSet<String>,
+        limit: Option<usize>,
+    ) -> HashSet<String> {
         self.select_neighbors(selected, Direction::Incoming, limit)
     }
 
-    fn select_neighbors(&self, selected: &HashSet<String>, direction: Direction, limit: Option<usize>) -> HashSet<String> {
+    fn select_neighbors(
+        &self,
+        selected: &HashSet<String>,
+        direction: Direction,
+        limit: Option<usize>,
+    ) -> HashSet<String> {
         let mut result = HashSet::new();
         let mut visited = HashSet::new();
         let mut queue = VecDeque::new();
@@ -252,7 +281,7 @@ impl OxideGraph {
         // Initialize queue with all selected nodes at depth 0
         for node_id in selected {
             if let Some(idx) = self.node_map.get(node_id) {
-                visited.insert(*idx); 
+                visited.insert(*idx);
                 queue.push_back((*idx, 0));
             }
         }
@@ -297,7 +326,10 @@ impl OxideGraph {
 
         // 1. Calculate in-degrees
         for node_idx in self.graph.node_indices() {
-            let degree = self.graph.edges_directed(node_idx, Direction::Incoming).count();
+            let degree = self
+                .graph
+                .edges_directed(node_idx, Direction::Incoming)
+                .count();
             in_degree.insert(node_idx, degree);
             if degree == 0 {
                 queue.push(node_idx);
@@ -322,7 +354,7 @@ impl OxideGraph {
 
             for node_idx in &queue {
                 processed_count += 1;
-                
+
                 if let Some(id) = self.graph.node_weight(*node_idx) {
                     current_level_nodes.push(id.clone());
                 }
@@ -349,7 +381,12 @@ impl OxideGraph {
         Ok(result)
     }
 
-    fn bfs_traversal(&self, start_node: &str, direction: Direction, limit: Option<usize>) -> HashSet<String> {
+    fn bfs_traversal(
+        &self,
+        start_node: &str,
+        direction: Direction,
+        limit: Option<usize>,
+    ) -> HashSet<String> {
         let mut result = HashSet::new();
         let start_index = match self.node_map.get(start_node) {
             Some(idx) => *idx,
@@ -358,7 +395,7 @@ impl OxideGraph {
 
         let mut visited = HashSet::new();
         let mut queue = VecDeque::new();
-        
+
         visited.insert(start_index);
         queue.push_back((start_index, 0));
 
@@ -396,7 +433,6 @@ impl OxideGraph {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
 
@@ -416,7 +452,7 @@ mod tests {
         let mut g = OxideGraph::new();
         g.add_node("A".to_string());
         g.add_node("B".to_string());
-        
+
         g.add_edge("A", "B", Some("type1".to_string())).unwrap();
         g.add_edge("A", "B", Some("type2".to_string())).unwrap();
 
@@ -428,10 +464,10 @@ mod tests {
     fn test_add_edge_missing_node() {
         let mut g = OxideGraph::new();
         // Don't add nodes A or B explicitly
-        
+
         let res = g.add_edge("A", "B", None);
         assert!(res.is_ok());
-        
+
         assert!(g.node_map.contains_key("A"));
         assert!(g.node_map.contains_key("B"));
         assert_eq!(g.node_count(), 2);
@@ -448,7 +484,8 @@ mod tests {
         // A -> B (data dependency)
         // B -> C (test dependency - should be ignored)
         g.add_edge("A", "B", None).unwrap();
-        g.add_edge("B", "C", Some("parent_test".to_string())).unwrap();
+        g.add_edge("B", "C", Some("parent_test".to_string()))
+            .unwrap();
 
         let descendants = g.descendants("A", None);
         assert!(descendants.contains("B"));
@@ -464,7 +501,8 @@ mod tests {
 
         // A -> B (test dependency - ignored)
         // B -> C (data dependency)
-        g.add_edge("A", "B", Some("parent_test".to_string())).unwrap();
+        g.add_edge("A", "B", Some("parent_test".to_string()))
+            .unwrap();
         g.add_edge("B", "C", None).unwrap();
 
         let ancestors = g.ancestors("C", None);
@@ -480,7 +518,8 @@ mod tests {
         g.add_node("C".to_string());
 
         g.add_edge("A", "B", None).unwrap();
-        g.add_edge("A", "C", Some("parent_test".to_string())).unwrap();
+        g.add_edge("A", "C", Some("parent_test".to_string()))
+            .unwrap();
 
         let mut selected = HashSet::new();
         selected.insert("A".to_string());
@@ -498,7 +537,8 @@ mod tests {
         g.add_node("C".to_string());
 
         g.add_edge("A", "B", None).unwrap();
-        g.add_edge("C", "B", Some("parent_test".to_string())).unwrap();
+        g.add_edge("C", "B", Some("parent_test".to_string()))
+            .unwrap();
 
         let mut selected = HashSet::new();
         selected.insert("B".to_string());
@@ -565,7 +605,7 @@ mod tests {
         g.add_node("B".to_string());
         g.add_node("C".to_string());
         g.add_node("D".to_string());
-        
+
         // A -> B
         // C -> D
         g.add_edge("A", "B", None).unwrap();
@@ -573,11 +613,11 @@ mod tests {
 
         let result = g.topological_sort_grouped().unwrap();
         assert_eq!(result.len(), 2);
-        
+
         let level0: HashSet<_> = result[0].iter().cloned().collect();
         assert!(level0.contains("A"));
         assert!(level0.contains("C"));
-        
+
         let level1: HashSet<_> = result[1].iter().cloned().collect();
         assert!(level1.contains("B"));
         assert!(level1.contains("D"));
