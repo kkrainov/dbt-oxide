@@ -1,6 +1,6 @@
-import time
 from dataclasses import dataclass, field
 from datetime import timedelta
+import time
 from typing import Any, Dict, List, Optional, Union
 
 from dbt.artifacts.resources.base import Docs, FileHash, GraphResource

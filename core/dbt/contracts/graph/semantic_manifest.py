@@ -48,7 +48,6 @@ class SemanticManifest:
         self.manifest = manifest
 
     def validate(self) -> bool:
-
         # TODO: Enforce this check.
         # if self.manifest.metrics and not self.manifest.semantic_models:
         #    fire_event(

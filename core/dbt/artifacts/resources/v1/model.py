@@ -1,6 +1,6 @@
-import enum
 from dataclasses import dataclass, field
 from datetime import datetime
+import enum
 from typing import Dict, List, Literal, Optional
 
 from dbt.artifacts.resources.types import AccessType, NodeType, TimePeriod

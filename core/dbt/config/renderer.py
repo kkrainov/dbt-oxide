@@ -1,5 +1,5 @@
-import re
 from datetime import date
+import re
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 from dbt.adapters.contracts.connection import HasCredentials

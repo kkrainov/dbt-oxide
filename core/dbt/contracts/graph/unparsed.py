@@ -1,11 +1,9 @@
-import datetime
-import re
 from dataclasses import dataclass, field
+import datetime
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Literal, Optional, Sequence, Union
 
-# trigger the PathEncoder
-import dbt_common.helper_types  # noqa:F401
 from dbt import deprecations
 from dbt.artifacts.resources import (
     ConstantPropertyInput,
@@ -41,6 +39,9 @@ from dbt_common.dataclass_schema import (
     dbtClassMixin,
 )
 from dbt_common.exceptions import DbtInternalError
+
+# trigger the PathEncoder
+import dbt_common.helper_types  # noqa:F401
 from dbt_semantic_interfaces.type_enums import (
     ConversionCalculationType,
     PeriodAggregation,
@@ -767,7 +768,7 @@ def normalize_date(d: Optional[datetime.date]) -> Optional[datetime.datetime]:
         return None
 
     # convert date to datetime
-    dt = d if type(d) == datetime.datetime else datetime.datetime(d.year, d.month, d.day)
+    dt = d if isinstance(d, datetime.datetime) else datetime.datetime(d.year, d.month, d.day)
 
     if not dt.tzinfo:
         # date is naive, re-interpret as system time zone

@@ -66,7 +66,6 @@ class HookSearcher(Iterable[HookBlock]):
 
 
 class HookParser(SimpleParser[HookBlock, HookNode]):
-
     # Hooks are only in the dbt_project.yml file for the project
     def get_path(self) -> FilePath:
         # There ought to be an existing file object for this, but
@@ -97,7 +96,6 @@ class HookParser(SimpleParser[HookBlock, HookNode]):
         name=None,
         **kwargs,
     ) -> HookNode:
-
         return super()._create_parsetime_node(
             block=block,
             path=path,

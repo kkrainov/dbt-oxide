@@ -1,7 +1,7 @@
-import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Sequence
+import uuid
 
 from dbt.artifacts.schemas.base import VersionedSchema, schema_version
 from dbt.artifacts.schemas.results import ExecutionResult, TimingInfo

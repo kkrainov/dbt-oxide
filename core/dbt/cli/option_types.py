@@ -1,7 +1,7 @@
 from typing import Optional
 
-import pytz
 from click import Choice, Context, Parameter, ParamType
+import pytz
 
 from dbt.config.utils import normalize_warn_error_options, parse_cli_yaml_string
 from dbt.event_time.sample_window import SampleWindow

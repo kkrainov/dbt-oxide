@@ -12,8 +12,6 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, NoReturn, Optio
 # approaches which will extend well to potentially many modules
 import pytz
 
-import dbt.deprecations as deprecations
-import dbt.flags as flags_module
 from dbt import tracking, utils
 from dbt.clients.jinja import get_rendered
 from dbt.clients.yaml_helper import (  # noqa: F401
@@ -25,6 +23,7 @@ from dbt.clients.yaml_helper import (  # noqa: F401
 )
 from dbt.constants import DEFAULT_ENV_PLACEHOLDER, SECRET_PLACEHOLDER
 from dbt.contracts.graph.nodes import Resource
+import dbt.deprecations as deprecations
 from dbt.events.types import JinjaLogDebug, JinjaLogInfo
 from dbt.exceptions import (
     EnvVarMissingError,
@@ -33,6 +32,7 @@ from dbt.exceptions import (
     SetStrictWrongTypeError,
     ZipStrictWrongTypeError,
 )
+import dbt.flags as flags_module
 from dbt.flags import get_flags
 from dbt.version import __version__ as dbt_version
 from dbt_common.constants import SECRET_ENV_PREFIX

@@ -113,7 +113,7 @@ class LogDbtProfileError(ErrorLevel):
         return "A011"
 
     def message(self) -> str:
-        msg = "Encountered an error while reading profiles:\n" f"  ERROR: {str(self.exc)}"
+        msg = f"Encountered an error while reading profiles:\n  ERROR: {str(self.exc)}"
         if self.profiles:
             msg += "Defined profiles:\n"
             for profile in self.profiles:
@@ -2084,7 +2084,7 @@ class InternalErrorOnRun(DebugLevel):
 the error persists, open an issue at https://github.com/dbt-labs/dbt-core
 """.strip()
 
-        return f"{red(prefix)}\n" f"{str(self.exc).strip()}\n\n" f"{internal_error_string}"
+        return f"{red(prefix)}\n{str(self.exc).strip()}\n\n{internal_error_string}"
 
 
 class GenericExceptionOnRun(ErrorLevel):

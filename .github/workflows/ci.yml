@@ -32,6 +32,22 @@ jobs:
         run: cargo test --no-default-features
         working-directory: src/dbt_rs
 
+  python-lint:
+    name: Python lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: astral-sh/ruff-action@v1
+        with:
+          src: "core/dbt"
+          args: "check --output-format=github"
+      
+      - uses: astral-sh/ruff-action@v1
+        with:
+          src: "core/dbt"
+          args: "format --check"
+
   python-tests:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest

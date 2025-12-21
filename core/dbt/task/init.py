@@ -1,16 +1,15 @@
 import copy
 import os
+from pathlib import Path
 import re
 import shutil
-from pathlib import Path
 from typing import Optional
 
 import click
 import yaml
 
-import dbt.config
-import dbt_common.clients.system
 from dbt.adapters.factory import get_include_paths, load_plugin
+import dbt.config
 from dbt.config.profile import read_profile
 from dbt.contracts.util import Identifier as ProjectName
 from dbt.events.types import (
@@ -28,6 +27,7 @@ from dbt.events.types import (
 from dbt.flags import get_flags
 from dbt.task.base import BaseTask, move_to_nearest_project_dir
 from dbt.version import _get_adapter_plugin_names
+import dbt_common.clients.system
 from dbt_common.events.functions import fire_event
 from dbt_common.exceptions import DbtRuntimeError
 
@@ -107,7 +107,7 @@ class InitTask(BaseTask):
                 choice_type = key[8:].replace("_", " ")
                 option_list = list(value.keys())
                 prompt_msg = (
-                    "\n".join([f"[{n+1}] {v}" for n, v in enumerate(option_list)])
+                    "\n".join([f"[{n + 1}] {v}" for n, v in enumerate(option_list)])
                     + f"\nDesired {choice_type} option (enter a number)"
                 )
                 numeric_choice = click.prompt(prompt_msg, type=click.INT)
@@ -235,7 +235,7 @@ class InitTask(BaseTask):
 
         prompt_msg = (
             "Which database would you like to use?\n"
-            + "\n".join([f"[{n+1}] {v}" for n, v in enumerate(available_adapters)])
+            + "\n".join([f"[{n + 1}] {v}" for n, v in enumerate(available_adapters)])
             + "\n\n(Don't see the one you want? https://docs.getdbt.com/docs/available-adapters)"
             + "\n\nEnter a number"
         )

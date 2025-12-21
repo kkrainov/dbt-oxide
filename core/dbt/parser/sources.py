@@ -1,5 +1,5 @@
-import itertools
 from dataclasses import replace
+import itertools
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
@@ -97,7 +97,6 @@ class SourcePatcher:
         unpatched: UnpatchedSourceDefinition,
         patch: Optional[SourcePatch],
     ) -> UnpatchedSourceDefinition:
-
         # This skips patching if no patch exists because of the
         # performance overhead of converting to and from dicts
         if patch is None:
@@ -370,7 +369,7 @@ class SourcePatcher:
             else:
                 for table_name in sorted(table_names):
                     unused_tables_formatted.append(
-                        f"  - Source table {patch_name}.{table_name} " f"(in {patch.path})"
+                        f"  - Source table {patch_name}.{table_name} (in {patch.path})"
                     )
         return unused_tables_formatted
 

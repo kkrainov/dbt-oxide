@@ -1,10 +1,7 @@
-from functools import partial
-from itertools import product
 from typing import Iterable, Iterator, List, NewType, Optional, Set
 
-import dbt_rs
-
 from dbt_common.exceptions import DbtInternalError
+import dbt_rs
 
 UniqueId = NewType("UniqueId", str)
 
@@ -49,15 +46,11 @@ class Graph:
     def __iter__(self) -> Iterator[UniqueId]:
         return iter(self.graph.nodes())
 
-    def ancestors(
-        self, node: UniqueId, max_depth: Optional[int] = None
-    ) -> Set[UniqueId]:
+    def ancestors(self, node: UniqueId, max_depth: Optional[int] = None) -> Set[UniqueId]:
         """Returns all nodes having a path to `node` in `graph`"""
         return self.graph.ancestors(node, max_depth)
 
-    def descendants(
-        self, node: UniqueId, max_depth: Optional[int] = None
-    ) -> Set[UniqueId]:
+    def descendants(self, node: UniqueId, max_depth: Optional[int] = None) -> Set[UniqueId]:
         """Returns all nodes reachable from `node` in `graph`"""
         return self.graph.descendants(node, max_depth)
 
@@ -111,9 +104,7 @@ class Graph:
     def add_node(self, node: UniqueId):
         self.graph.add_node(node)
 
-    def add_edge(
-        self, source: UniqueId, target: UniqueId, edge_type: Optional[str] = None
-    ):
+    def add_edge(self, source: UniqueId, target: UniqueId, edge_type: Optional[str] = None):
         self.graph.add_edge(source, target, edge_type)
 
     def remove_node(self, node: UniqueId):

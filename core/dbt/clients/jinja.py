@@ -1,6 +1,6 @@
+from contextlib import contextmanager
 import re
 import threading
-from contextlib import contextmanager
 from typing import Any, Dict, List, NoReturn, Optional, Tuple, Union
 
 import jinja2

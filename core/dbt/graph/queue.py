@@ -1,8 +1,6 @@
-import threading
 from queue import PriorityQueue
-from typing import Dict, Generator, List, Optional, Set
-
-import dbt_rs
+import threading
+from typing import Dict, Optional, Set
 
 from dbt.contracts.graph.manifest import Manifest
 from dbt.contracts.graph.nodes import (
@@ -12,6 +10,7 @@ from dbt.contracts.graph.nodes import (
     SourceDefinition,
 )
 from dbt.node_types import NodeType
+import dbt_rs
 
 from .graph import Graph, UniqueId
 
@@ -91,9 +90,7 @@ class GraphQueue:
                 scores[node] = level
         return scores
 
-    def get(
-        self, block: bool = True, timeout: Optional[float] = None
-    ) -> GraphMemberNode:
+    def get(self, block: bool = True, timeout: Optional[float] = None) -> GraphMemberNode:
         """Get a node off the inner priority queue. By default, this blocks.
 
         This takes the lock, but only for part of it.

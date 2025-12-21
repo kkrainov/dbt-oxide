@@ -43,7 +43,6 @@ class Quoting(dbtClassMixin, Mergeable):
 
 @dataclass
 class Package(dbtClassMixin):
-
     # Exclude {'name': None} from to_dict result to avoid changing sha1_hash result
     # when user has not changed their 'packages' configuration.
     def __post_serialize__(self, data, context: Optional[Dict]):

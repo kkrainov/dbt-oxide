@@ -4,10 +4,10 @@ import pkgutil
 from types import ModuleType
 from typing import Callable, Dict, List, Mapping
 
-import dbt.tracking
 from dbt.contracts.graph.manifest import Manifest
 from dbt.plugins.contracts import PluginArtifacts
 from dbt.plugins.manifest import PluginNodes
+import dbt.tracking
 from dbt_common.exceptions import DbtRuntimeError
 from dbt_common.tests import test_caching_enabled
 
@@ -108,7 +108,6 @@ class PluginManager:
 
     @classmethod
     def from_modules(cls, project_name: str) -> "PluginManager":
-
         if test_caching_enabled():
             global _MODULES_CACHE
             if _MODULES_CACHE is None:
@@ -124,9 +123,9 @@ class PluginManager:
             if hasattr(module, cls.PLUGIN_ATTR_NAME):
                 available_plugins = getattr(module, cls.PLUGIN_ATTR_NAME, [])
                 for plugin_cls in available_plugins:
-                    assert issubclass(
-                        plugin_cls, dbtPlugin
-                    ), f"'plugin' in {name} must be subclass of dbtPlugin"
+                    assert issubclass(plugin_cls, dbtPlugin), (
+                        f"'plugin' in {name} must be subclass of dbtPlugin"
+                    )
                     plugin = plugin_cls(project_name=project_name)
                     plugins.append(plugin)
         return cls(plugins=plugins)

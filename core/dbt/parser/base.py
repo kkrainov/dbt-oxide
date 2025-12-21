@@ -292,7 +292,6 @@ class ConfiguredParser(
     def update_parsed_node_relation_names(
         self, parsed_node: FinalNode, config_dict: Dict[str, Any]
     ) -> None:
-
         # These call the RelationUpdate callable to go through generate_name macros
         self._update_node_database(parsed_node, config_dict.get("database"))
         self._update_node_schema(parsed_node, config_dict.get("schema"))

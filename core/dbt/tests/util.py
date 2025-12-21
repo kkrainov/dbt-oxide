@@ -1,10 +1,10 @@
-import json
-import os
-import shutil
 from contextlib import contextmanager
 from contextvars import ContextVar, copy_context
 from datetime import datetime, timezone
 from io import StringIO
+import json
+import os
+import shutil
 from typing import Any, Callable, Dict, List, Optional
 from unittest import mock
 
@@ -415,9 +415,9 @@ def check_relation_has_expected_schema(adapter, relation_name, expected_schema: 
     relation = relation_from_name(adapter, relation_name)
     with get_connection(adapter):
         actual_columns = {c.name: c.data_type for c in adapter.get_columns_in_relation(relation)}
-    assert (
-        actual_columns == expected_schema
-    ), f"Actual schema did not match expected, actual: {json.dumps(actual_columns)}"
+    assert actual_columns == expected_schema, (
+        f"Actual schema did not match expected, actual: {json.dumps(actual_columns)}"
+    )
 
 
 # This can be used when checking relations in different schemas, by supplying
@@ -444,21 +444,21 @@ def check_relations_equal_with_relations(
             sql = adapter.get_rows_different_sql(basis, relation, column_names=column_names)  # type: ignore
             _, tbl = adapter.execute(sql, fetch=True)
             num_rows = len(tbl)
-            assert (
-                num_rows == 1
-            ), f"Invalid sql query from get_rows_different_sql: incorrect number of rows ({num_rows})"
+            assert num_rows == 1, (
+                f"Invalid sql query from get_rows_different_sql: incorrect number of rows ({num_rows})"
+            )
             num_cols = len(tbl[0])
-            assert (
-                num_cols == 2
-            ), f"Invalid sql query from get_rows_different_sql: incorrect number of cols ({num_cols})"
+            assert num_cols == 2, (
+                f"Invalid sql query from get_rows_different_sql: incorrect number of cols ({num_cols})"
+            )
             row_count_difference = tbl[0][0]
-            assert (
-                row_count_difference == 0
-            ), f"Got {row_count_difference} difference in row count betwen {basis} and {relation}"
+            assert row_count_difference == 0, (
+                f"Got {row_count_difference} difference in row count betwen {basis} and {relation}"
+            )
             rows_mismatched = tbl[0][1]
-            assert (
-                rows_mismatched == 0
-            ), f"Got {rows_mismatched} different rows between {basis} and {relation}"
+            assert rows_mismatched == 0, (
+                f"Got {rows_mismatched} different rows between {basis} and {relation}"
+            )
 
 
 # Uses:

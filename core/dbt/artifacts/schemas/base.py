@@ -1,6 +1,6 @@
 import dataclasses
-import functools
 from datetime import datetime, timezone
+import functools
 from typing import Any, ClassVar, Dict, Optional, Type, TypeVar
 
 from mashumaro.jsonschema import build_json_schema

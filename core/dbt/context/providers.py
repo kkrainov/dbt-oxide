@@ -1,6 +1,6 @@
 import abc
-import os
 from copy import deepcopy
+import os
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -255,7 +255,6 @@ class BaseResolver(metaclass=abc.ABCMeta):
             and target.config.event_time
             and isinstance(self.model, (ModelNode, SnapshotNode))
         ):
-
             # Handling of microbatch models
             if (
                 isinstance(self.model, ModelNode)
@@ -1624,7 +1623,8 @@ class ModelContext(ProviderContext):
             return []
         # TODO CT-211
         return [
-            h.to_dict(omit_none=True) for h in self.model.config.pre_hook  # type: ignore[union-attr] # noqa
+            h.to_dict(omit_none=True)
+            for h in self.model.config.pre_hook  # type: ignore[union-attr] # noqa
         ]
 
     @contextproperty()
@@ -1633,7 +1633,8 @@ class ModelContext(ProviderContext):
             return []
         # TODO CT-211
         return [
-            h.to_dict(omit_none=True) for h in self.model.config.post_hook  # type: ignore[union-attr] # noqa
+            h.to_dict(omit_none=True)
+            for h in self.model.config.post_hook  # type: ignore[union-attr] # noqa
         ]
 
     @contextproperty()
@@ -1708,7 +1709,8 @@ class ModelContext(ProviderContext):
         """
         if getattr(self.model, "defer_relation", None):
             return self.db_wrapper.Relation.create_from(
-                self.config, self.model.defer_relation  # type: ignore
+                self.config,
+                self.model.defer_relation,  # type: ignore
             )
         else:
             return None

@@ -432,7 +432,8 @@ class RefBadContextError(CompilationError):
         keyword_args = ""
         if self.kwargs:
             keyword_args = ", ".join(
-                "{}='{}'".format(k, v) for k, v in self.kwargs.items()  # type: ignore
+                "{}='{}'".format(k, v)
+                for k, v in self.kwargs.items()  # type: ignore
             )
             keyword_args = "," + keyword_args
 
@@ -1158,7 +1159,6 @@ class AmbiguousAliasError(CompilationError):
         super().__init__(msg=self.get_message())
 
     def get_message(self) -> str:
-
         msg = (
             f'dbt found two resources with the database representation "{self.duped_name}".\ndbt '
             "cannot create two resources with identical database representations. "
@@ -1463,7 +1463,7 @@ class RPCKilledException(DbtRuntimeError):
 
 class RPCCompiling(DbtRuntimeError):
     CODE = 10010
-    MESSAGE = 'RPC server is compiling the project, call the "status" method for' " compile status"
+    MESSAGE = 'RPC server is compiling the project, call the "status" method for compile status'
 
     def __init__(self, msg: Optional[str] = None, node=None):
         if msg is None:
@@ -1473,13 +1473,11 @@ class RPCCompiling(DbtRuntimeError):
 
 class RPCLoadException(DbtRuntimeError):
     CODE = 10011
-    MESSAGE = (
-        'RPC server failed to compile project, call the "status" method for' " compile status"
-    )
+    MESSAGE = 'RPC server failed to compile project, call the "status" method for compile status'
 
     def __init__(self, cause: Dict[str, Any]):
         self.cause = cause
-        self.msg = f'{self.MESSAGE}: {self.cause["message"]}'
+        self.msg = f"{self.MESSAGE}: {self.cause['message']}"
         super().__init__(self.msg)
 
     def data(self):

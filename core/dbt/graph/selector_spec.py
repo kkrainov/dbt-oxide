@@ -1,7 +1,7 @@
-import os
-import re
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
+import os
+import re
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 
 from dbt.exceptions import InvalidSelectorError
@@ -77,7 +77,7 @@ class SelectionCriteria:
     def __post_init__(self):
         if self.children and self.childrens_parents:
             raise DbtRuntimeError(
-                f'Invalid node spec {self.raw} - "@" prefix and "+" suffix ' "are incompatible"
+                f'Invalid node spec {self.raw} - "@" prefix and "+" suffix are incompatible'
             )
 
     @classmethod

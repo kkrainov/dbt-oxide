@@ -1,5 +1,5 @@
-import hashlib
 from dataclasses import dataclass
+import hashlib
 from typing import List, Optional
 
 from dbt.artifacts.resources.types import NodeType

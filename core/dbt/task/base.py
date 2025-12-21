@@ -1,15 +1,13 @@
-import os
-import threading
-import time
-import traceback
 from abc import ABCMeta, abstractmethod
 from contextlib import nullcontext
 from datetime import datetime, timezone
+import os
 from pathlib import Path
+import threading
+import time
+import traceback
 from typing import Any, Dict, List, Optional, Set
 
-import dbt.exceptions
-import dbt_common.exceptions.base
 from dbt import tracking
 from dbt.artifacts.resources.types import NodeType
 from dbt.artifacts.schemas.results import (
@@ -39,6 +37,7 @@ from dbt.events.types import (
     NodeExecuting,
     SkippingDetails,
 )
+import dbt.exceptions
 from dbt.flags import get_flags
 from dbt.graph import Graph
 from dbt.task import group_lookup
@@ -46,6 +45,7 @@ from dbt.task.printer import print_run_result_error
 from dbt_common.events.contextvars import get_node_info
 from dbt_common.events.functions import fire_event
 from dbt_common.exceptions import DbtInternalError, DbtRuntimeError, NotImplementedError
+import dbt_common.exceptions.base
 
 
 def read_profiles(profiles_dir: Optional[str] = None) -> Dict[str, Any]:
@@ -479,7 +479,6 @@ class BaseRunner(metaclass=ABCMeta):
 def resource_types_from_args(
     args: Flags, all_resource_values: Set[NodeType], default_resource_values: Set[NodeType]
 ) -> Set[NodeType]:
-
     if not args.resource_types:
         resource_types = default_resource_values
     else:

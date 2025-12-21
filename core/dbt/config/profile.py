@@ -1,5 +1,5 @@
-import os
 from dataclasses import dataclass
+import os
 from typing import Any, Dict, Optional, Tuple
 
 from dbt.adapters.contracts.connection import Credentials, HasCredentials
@@ -188,9 +188,7 @@ Here, [profile name] should be replaced with a profile name
 defined in your profiles.yml file. You can find profiles.yml here:
 
 {profiles_file}/profiles.yml
-""".format(
-                profiles_file=default_profiles_dir()
-            )
+""".format(profiles_file=default_profiles_dir())
             raise DbtProjectError(NO_SUPPLIED_PROFILE_ERROR)
         return profile_name
 

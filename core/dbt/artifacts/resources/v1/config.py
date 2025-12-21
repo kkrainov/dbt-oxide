@@ -1,5 +1,5 @@
-import re
 from dataclasses import dataclass, field
+import re
 from typing import Any, Dict, List, Optional, Union
 
 from mashumaro.jsonschema.annotations import Pattern

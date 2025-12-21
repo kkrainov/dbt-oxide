@@ -60,6 +60,11 @@ Consult these for the "how" when implementing a phase.
     - Performance: `performance/runner` (Use the `performance/` framework for regression testing)
         - **Prerequisites:** `hyperfine` must be installed (e.g., `cargo install hyperfine`).
         - **Command:** `uv run cargo run --manifest-path performance/runner/Cargo.toml -- sample -p $PWD/performance/projects -b $PWD/performance/baselines -o $PWD/performance/results`
+- **Python Code Quality:**
+  - `uv run ruff check core/dbt` - Lint code (CI enforces this)
+  - `uv run ruff format core/dbt` - Format code (CI enforces this)
+  - `uv run mypy core/dbt` - Type checking (optional, IDE integrated)
+  - `pre-commit run --all-files` - Run all pre-commit hooks locally
 
 
 ## Rust Testing Strategy
@@ -192,15 +197,32 @@ This project is a **fork** of `dbt-labs/dbt-core`. We have two remotes configure
 
 ### Standard Git Operations
 
+> [!CAUTION]
+> **ALL commits MUST be signed with DCO.** Use `git commit -s` for every commit.
+> This is enforced in CI and PRs will fail without it.
+
+**Developer Certificate of Origin (DCO):**
+
+dbt-oxide requires all contributors to sign off on their commits to certify they have the right to submit the code. This is done by adding `-s` to your commit command.
+
+See the full [DCO](DCO) file for details.
+
 **Committing changes:**
 ```bash
 # Stage ALL related files (don't forget implementation files!)
 git add <all-related-files>
 
-# Commit with conventional message
-git commit -m "<type>: <short description>
+# Commit with DCO sign-off (-s is MANDATORY)
+git commit -s -m "<type>: <short description>
 
 <detailed body if needed>"
+
+# This adds "Signed-off-by: Your Name <your.email@example.com>" to the commit
+```
+
+**If you forgot -s, amend the commit:**
+```bash
+git commit --amend -s --no-edit
 ```
 
 **Pushing to fork:**
@@ -271,6 +293,29 @@ git commit -m "docs: clarify Phase 2 implementation status"
 # Bug fix
 git commit -m "fix: handle missing optional fields in OxideNode deserialization"
 ```
+
+### Changelog Generation
+
+dbt-oxide uses [git-cliff](https://git-cliff.org/) to automatically generate changelogs from conventional commits.
+
+**How it works:**
+1. Commits following conventional format are parsed automatically
+2. Changelog entries are grouped by type (Features, Bug Fixes, etc.)
+3. Run `git cliff --output CHANGELOG.md` to regenerate the changelog
+
+**Manual changelog update:**
+```bash
+# Update changelog for unreleased changes
+git cliff --unreleased --prepend CHANGELOG.md
+
+# Generate changelog for a new version
+git cliff --tag v0.2.0 --prepend CHANGELOG.md
+```
+
+**CI Integration:** Changelog is automatically updated on releases via GitHub Actions.
+
+> [!TIP]
+> Write meaningful commit messages - they become your changelog entries!
 
 ### Commit Checklist
 
