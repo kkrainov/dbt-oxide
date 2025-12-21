@@ -169,3 +169,111 @@ Don't reinvent the wheel. Use the "blessed" crates that the community has standa
 ### 8. Formatting & Linting (Strict Mode)
 - **Clippy is Law:** The code must pass `cargo clippy -- -D warnings`. This treats all linter warnings as errors.
 - **Format:** `cargo fmt` must be applied.
+
+---
+
+## Git Workflow (Fork Repository)
+
+This project is a **fork** of `dbt-labs/dbt-core`. We have two remotes configured:
+
+| Remote | Repository | Purpose |
+|--------|------------|---------|
+| `origin` | `kkrainov/dbt-oxide` | **Our fork** - push all changes here |
+| `upstream` | `dbt-labs/dbt-core` | Upstream dbt-core - read-only, for syncing updates |
+
+### Critical Rules
+
+> [!CAUTION]
+> **NEVER push to upstream.** Always push to `origin` (the fork).
+> **NEVER pull from upstream into main.** Only sync upstream manually when needed.
+
+### Standard Git Operations
+
+**Committing changes:**
+```bash
+# Stage ALL related files (don't forget implementation files!)
+git add <all-related-files>
+
+# Commit with conventional message
+git commit -m "<type>: <short description>
+
+<detailed body if needed>"
+```
+
+**Pushing to fork:**
+```bash
+# Push current branch to fork
+git push origin HEAD
+
+# Push main to fork
+git push origin main
+```
+
+**Pulling latest from fork (not upstream!):**
+```bash
+# Fetch from fork
+git fetch origin
+
+# Reset to match fork's main
+git reset --hard origin/main
+```
+
+**Syncing from upstream (rare, manual only):**
+```bash
+# Only when explicitly updating from dbt-core
+git fetch upstream
+git merge upstream/main --no-commit
+# Resolve conflicts, then commit
+```
+
+### Commit Message Convention
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+<type>: <short description>
+
+<optional body with details>
+```
+
+**Types:**
+| Type | Use For |
+|------|---------|
+| `feat` | New features, implementations (Rust structs, Python methods) |
+| `fix` | Bug fixes |
+| `docs` | Documentation only (roadmaps, plans, README) |
+| `refactor` | Code restructuring without behavior change |
+| `test` | Adding or modifying tests |
+| `chore` | Build, CI, tooling changes |
+| `perf` | Performance improvements |
+
+**Examples:**
+
+```bash
+# Feature implementation
+git commit -m "feat: implement Phase 2 Zero-Copy Manifest infrastructure
+
+Rust implementation (src/dbt_rs/):
+- manifest.rs: OxideManifest with full schema
+- py_manifest.rs: PyO3 bindings with load_manifest(), get_node_count()
+- Thread-safe global storage with OnceCell<RwLock<>>
+
+Python implementation (core/dbt/parser/manifest.py):
+- _sync_manifest_to_rust() method in ManifestLoader
+- Eager sync at end of load() with fail-fast error handling"
+
+# Documentation update
+git commit -m "docs: clarify Phase 2 implementation status"
+
+# Bug fix
+git commit -m "fix: handle missing optional fields in OxideNode deserialization"
+```
+
+### Commit Checklist
+
+Before committing, verify:
+1. ✅ All related files are staged (implementation + docs + tests)
+2. ✅ Commit message follows conventional format
+3. ✅ Body describes Rust AND Python changes if both modified
+4. ✅ No references to future phases (focus on what's done)
+5. ✅ Tests pass: `cargo test --no-default-features` and `uv run pytest`
