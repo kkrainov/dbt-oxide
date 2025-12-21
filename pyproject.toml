@@ -42,7 +42,7 @@ exclude = [
     ".venv",
     "third-party-stubs",
     "scripts",
-    "test",
+    "tests",
     "performance",
     "core/dbt/docs/build",
     "core/dbt/events/core_types_pb2.py",

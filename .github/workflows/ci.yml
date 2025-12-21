@@ -40,10 +40,12 @@ jobs:
       
       - uses: astral-sh/ruff-action@v1
         with:
+          src: "core/dbt"
           args: "check --output-format=github"
       
       - uses: astral-sh/ruff-action@v1
         with:
+          src: "core/dbt"
           args: "format --check"
 
   python-tests:

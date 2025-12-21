@@ -197,15 +197,32 @@ This project is a **fork** of `dbt-labs/dbt-core`. We have two remotes configure
 
 ### Standard Git Operations
 
+> [!CAUTION]
+> **ALL commits MUST be signed with DCO.** Use `git commit -s` for every commit.
+> This is enforced in CI and PRs will fail without it.
+
+**Developer Certificate of Origin (DCO):**
+
+dbt-oxide requires all contributors to sign off on their commits to certify they have the right to submit the code. This is done by adding `-s` to your commit command.
+
+See the full [DCO](DCO) file for details.
+
 **Committing changes:**
 ```bash
 # Stage ALL related files (don't forget implementation files!)
 git add <all-related-files>
 
-# Commit with conventional message
-git commit -m "<type>: <short description>
+# Commit with DCO sign-off (-s is MANDATORY)
+git commit -s -m "<type>: <short description>
 
 <detailed body if needed>"
+
+# This adds "Signed-off-by: Your Name <your.email@example.com>" to the commit
+```
+
+**If you forgot -s, amend the commit:**
+```bash
+git commit --amend -s --no-edit
 ```
 
 **Pushing to fork:**
