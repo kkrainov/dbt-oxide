@@ -523,7 +523,38 @@ class ManifestLoader:
         self.check_forcing_batch_concurrency()
         self.check_microbatch_model_has_a_filtered_input()
 
+        # Sync manifest to Rust for zero-copy access (Phase 2: Zero-Copy Manifest)
+        self._sync_manifest_to_rust()
+
         return self.manifest
+
+    def _sync_manifest_to_rust(self) -> None:
+        """Serialize manifest to Rust for zero-copy access."""
+        import time
+        try:
+            import dbt_rs
+            
+            start = time.perf_counter()
+            
+            # Use mashumaro's to_dict for efficient serialization
+            writable = self.manifest.writable_manifest()
+            import json
+            json_str = json.dumps(writable.to_dict())
+            
+            # Load into Rust
+            dbt_rs.load_manifest(json_str)
+            
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            fire_event(Note(msg=f"dbt-oxide: Manifest synced to Rust in {elapsed_ms:.1f}ms"))
+            
+        except ImportError:
+            # dbt_rs not available - non-oxide build
+            pass
+        except Exception as e:
+            from dbt.exceptions import DbtRuntimeError
+            raise DbtRuntimeError(
+                f"Failed to sync manifest to Rust engine: {e}"
+            ) from e
 
     def safe_update_project_parser_files_partially(self, project_parser_files: Dict) -> Dict:
         if self.saved_manifest is None:

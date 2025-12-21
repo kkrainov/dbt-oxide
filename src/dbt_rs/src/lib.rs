@@ -1,13 +1,17 @@
 mod graph;
+mod manifest;
 
 #[cfg(feature = "extension-module")]
 mod py_graph;
 
 #[cfg(feature = "extension-module")]
+mod py_manifest;
+
+#[cfg(feature = "extension-module")]
 use pyo3::prelude::*;
 
 #[cfg(feature = "extension-module")]
-use py_graph::DbtGraph;
+use py_graph::DbtGraph; // This line will likely become unused if register_graph_module is used.
 
 /// Returns the Rust version of the dbt-oxide extension.
 #[cfg(feature = "extension-module")]
@@ -23,6 +27,8 @@ fn dbt_rs(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(rust_version, m)?)?;
     
     m.add_class::<DbtGraph>()?;
+    
+    py_manifest::register_manifest_module(m)?;
     
     Ok(())
 }

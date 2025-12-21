@@ -111,3 +111,6 @@ poetry.lock
 
 # asdf
 .tool-versions
+
+# agent rules
+.agent/
