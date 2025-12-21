@@ -1,0 +1,15 @@
+dbt-oxide
+Copyright 2025-present Kirill Krainov
+
+This project is a derivative work based on dbt-core.
+Original work: https://github.com/dbt-labs/dbt-core
+Copyright 2021 dbt Labs, Inc.
+Licensed under the Apache License 2.0.
+
+Modifications include:
+- Rust implementation of core graph algorithms (src/dbt_rs/)
+- Rust implementation of manifest parsing
+- Performance-optimized data structures using PyO3 bindings
+
+The original dbt-core code remains under dbt Labs' copyright.
+New Rust implementations are Copyright Kirill Krainov.

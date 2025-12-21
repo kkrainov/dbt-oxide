@@ -1,5 +1,12 @@
 version: 2
 updates:
+  # rust dependencies
+  - package-ecosystem: "cargo"
+    directory: "/src/dbt_rs"
+    schedule:
+      interval: "weekly"
+    rebase-strategy: "disabled"
+
   # python dependencies
   - package-ecosystem: "pip"
     directory: "/"
