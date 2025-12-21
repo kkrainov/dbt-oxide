@@ -15,34 +15,32 @@
     - Strictly use `uv` for Python virtual environment management and package installation.
     - Build backend: `maturin`.
 
-## Roadmap Status
+## Documentation Structure
 
-- [x] **Phase 0: Foundation & Infrastructure** (Current Focus)
-    - Hybrid build environment (Maturin + PyO3).
-    - Rust workspace in `src/dbt_rs`.
-- [ ] **Phase 1: The Graph Engine** (In Progress - Removing NetworkX)
-    - [x] Step 1.1: Foundation & Skeleton (Structs, Dependencies)
-    - [x] Step 1.2: Core Operations (TDD)
-    - [x] Step 1.3: Traversal Algorithms (TDD)
-    - [x] Step 1.4: Selection Algorithms (TDD)
-    - [x] Step 1.5: Topological Sort (TDD)
-    - [x] Step 2.1: Python Wrapper & Loading
-    - [x] Step 2.2: Method Routing
-    - [x] Step 2.3: Queue Acceleration
-    - [x] Step 3.1: Enforce Rust Availability
-    - [x] Step 3.2: Clean Queue Logic
-    - [x] Step 4.1: Structural Parity (Rust TDD)
-    - [x] Step 4.2: Linker & Compiler Refactor
-    - [x] Step 4.3: Graph Wrapper & Queue Refactor
-    - [x] Step 4.4: Test Suite Updates
-    - [x] Step 4.5: Deprecation
-- [ ] **Phase 2: Zero-Copy Manifest**
+Project documentation is organized into two directories:
 
-    - Share Manifest state without serialization overhead.
-- [ ] **Phase 3: The Compiler Engine**
-    - Replace Jinja2 with `minijinja`.
-- [ ] **Phase 4: Parallelization & Introspection**
-    - Rayon integration and introspection separation.
+### `docs/roadmap/`
+
+High-level roadmaps describing project initiatives. Each roadmap covers:
+- What has been implemented
+- Current work in progress
+- Future plans and milestones
+
+Start here to understand the "why" and "what" of a project.
+
+### `docs/plans/`
+
+Detailed execution plans for specific phases or features. Each plan includes:
+- Step-by-step implementation guides
+- Code samples and architecture decisions
+- Test strategies and verification checklists
+
+Consult these for the "how" when implementing a phase.
+
+> [!NOTE]
+> Always read the relevant roadmap first for context, then the detailed plan for implementation specifics.
+
+
 
 ## Code Comments Best Practices
 
@@ -76,6 +74,41 @@ To avoid PyO3 linking errors during `cargo test`, we strictly separate logic int
 - **No "Fixing" Tests:** Do not modify assertions to match your new output (e.g., changing `set` to `list`).
 - **Adapt Implementation:** If a test fails due to a type mismatch (e.g. `EdgeView` vs `list`), you MUST modify the implementation to support the test's expectation (e.g. implementing `__eq__` to handle lists), rather than changing the test.
 - **Legacy Compatibility:** We must maintain bug-for-bug compatibility with `networkx` unless explicitly deciding to fix a bug (which requires approval).
+
+## Python Best Practices (Strangler Pattern)
+
+The Python codebase is a **shell layer** that wraps Rust implementations. All external interfaces must remain unchanged.
+
+### Core Principles
+
+1. **Preserve Original Signatures:** Python wrappers must expose the exact same method signatures, return types, and behavior as the original implementation.
+2. **Hide Rust Internals:** Other `dbt-core` components must never import from `dbt_rs` directly. They interact only with Python wrappers (e.g., `dbt.graph.Graph`, not `dbt_rs.DbtGraph`).
+3. **Encapsulation:** Rust types should be converted to Python-native types at the wrapper boundary (e.g., `HashSet<String>` → `set[str]`).
+
+### Do's and Don'ts
+
+| ✅ Do | ❌ Don't |
+|-------|----------|
+| Wrap Rust calls in existing Python classes | Expose `dbt_rs.*` types in public APIs |
+| Convert Rust return types to match original signatures | Change method signatures to "simplify" integration |
+| Handle Rust errors and convert to `DbtRuntimeError` | Let Rust panics propagate to callers |
+| Keep wrapper logic minimal (delegate to Rust) | Add business logic in wrapper layers |
+
+### Example Pattern
+
+```python
+# Good: Python wrapper hides Rust implementation
+class Graph:
+    def __init__(self):
+        self._rust_graph = dbt_rs.DbtGraph()  # Private
+    
+    def ancestors(self, node: str) -> Set[str]:  # Same signature as before
+        return self._rust_graph.ancestors(node)  # Delegate to Rust
+
+# Bad: Exposing Rust types directly
+from dbt_rs import DbtGraph  # Don't do this in core modules
+```
+
 
 ## Rust Best Practices & Guidelines
 
