@@ -61,14 +61,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       
+      - uses: dtolnay/rust-toolchain@stable
+      
       - name: Install uv
         run: pip install uv
       
       - name: Install dependencies
         run: uv sync
       
+      - name: Install test dependencies
+        run: uv pip install pytest pytest-mock hypothesis pyyaml dbt-adapters dbt-postgres freezegun
+      
       - name: Build Rust extension
-        run: uv run maturin develop --release
+        run: uvx maturin develop --release --manifest-path ../src/dbt_rs/Cargo.toml
         working-directory: core
       
       - name: Run unit tests
@@ -87,4 +92,28 @@ jobs:
         with:
           fetch-depth: 0
       
-      - uses: dkhamsing/dco-check@v1
+      - name: Check DCO
+        run: |
+          # Get the base commit
+          BASE_COMMIT=$(git merge-base HEAD origin/${{ github.base_ref }})
+          
+          # Check all commits in the PR
+          git log --format='%H %ae %s' $BASE_COMMIT..HEAD | while read commit email subject; do
+            # Skip merge commits (they don't need DCO)
+            if git log -1 --format='%P' $commit | grep -q ' '; then
+              echo "Skipping merge commit $commit"
+              continue
+            fi
+            
+            # Check if commit message has Signed-off-by
+            if ! git log -1 --format='%B' $commit | grep -q "^Signed-off-by: "; then
+              echo "Commit $commit is missing DCO sign-off"
+              echo "   Subject: $subject"
+              echo "   Author: $email"
+              echo ""
+              echo "To fix: git commit --amend --signoff && git push --force-with-lease"
+              exit 1
+            fi
+          done
+          
+          echo "All commits have DCO sign-off"

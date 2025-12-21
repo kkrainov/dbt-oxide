@@ -101,6 +101,7 @@ pub struct OxideSavedQuery {
     pub depends_on: OxideDependsOn,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct OxideUnitTest {
     pub unique_id: String,
@@ -109,6 +110,7 @@ pub struct OxideUnitTest {
     pub depends_on: OxideDependsOn,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct OxideManifestMetadata {
     #[serde(default)]
@@ -117,6 +119,7 @@ pub struct OxideManifestMetadata {
     pub adapter_type: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct OxideManifest {
     #[serde(default)]
@@ -141,15 +144,16 @@ pub struct OxideManifest {
     pub metadata: Option<OxideManifestMetadata>,
 }
 
+#[allow(dead_code)]
 impl OxideManifest {
     pub fn from_json_str(json: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json)
     }
-    
+
     pub fn get_node(&self, unique_id: &str) -> Option<&OxideNode> {
         self.nodes.get(unique_id)
     }
-    
+
     pub fn node_count(&self) -> usize {
         self.nodes.len()
     }
@@ -158,14 +162,14 @@ impl OxideManifest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_parse_empty_manifest() {
         let json = r#"{"nodes": {}, "sources": {}, "macros": {}}"#;
         let manifest = OxideManifest::from_json_str(json).unwrap();
         assert_eq!(manifest.node_count(), 0);
     }
-    
+
     #[test]
     fn test_parse_single_node() {
         let json = r#"{
@@ -187,7 +191,7 @@ mod tests {
         let node = manifest.get_node("model.my_project.my_model").unwrap();
         assert_eq!(node.depends_on.nodes, vec!["model.my_project.upstream"]);
     }
-    
+
     #[test]
     fn test_parse_with_missing_optional_fields() {
         let json = r#"{
@@ -208,7 +212,7 @@ mod tests {
         assert!(node.raw_code.is_none());
         assert!(node.depends_on.nodes.is_empty());
     }
-    
+
     #[test]
     fn test_parse_all_node_types() {
         let json = r#"{
@@ -249,14 +253,14 @@ mod tests {
             }
         }"#;
         let manifest = OxideManifest::from_json_str(json).unwrap();
-        
+
         assert_eq!(manifest.nodes.len(), 1);
         assert_eq!(manifest.sources.len(), 1);
         assert_eq!(manifest.macros.len(), 1);
         assert_eq!(manifest.exposures.len(), 1);
         assert_eq!(manifest.metrics.len(), 1);
     }
-    
+
     #[test]
     fn test_invalid_json_returns_error() {
         let invalid_json = r#"{"nodes": invalid}"#;

@@ -25,10 +25,10 @@ fn rust_version() -> PyResult<String> {
 #[pymodule]
 fn dbt_rs(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(rust_version, m)?)?;
-    
+
     m.add_class::<DbtGraph>()?;
-    
+
     py_manifest::register_manifest_module(m)?;
-    
+
     Ok(())
 }

@@ -1,6 +1,6 @@
-use std::collections::HashSet;
-use pyo3::prelude::*;
 use crate::graph::OxideGraph;
+use pyo3::prelude::*;
+use std::collections::HashSet;
 
 #[pyclass]
 pub struct DbtGraph {
@@ -33,7 +33,7 @@ impl DbtGraph {
     pub fn number_of_edges(&self) -> usize {
         self.inner.edge_count()
     }
-    
+
     pub fn get_edge_weight(&self, source: String, target: String) -> Option<String> {
         self.inner.get_edge_weight(&source, &target).cloned()
     }
@@ -43,8 +43,14 @@ impl DbtGraph {
     }
 
     #[pyo3(signature = (source, target, edge_type=None))]
-    pub fn add_edge(&mut self, source: String, target: String, edge_type: Option<String>) -> PyResult<()> {
-        self.inner.add_edge(&source, &target, edge_type)
+    pub fn add_edge(
+        &mut self,
+        source: String,
+        target: String,
+        edge_type: Option<String>,
+    ) -> PyResult<()> {
+        self.inner
+            .add_edge(&source, &target, edge_type)
             .map_err(PyErr::new::<pyo3::exceptions::PyValueError, _>)
     }
 
@@ -56,16 +62,25 @@ impl DbtGraph {
         self.inner.ancestors(&node, limit)
     }
 
-    pub fn select_children(&self, selected: HashSet<String>, limit: Option<usize>) -> HashSet<String> {
+    pub fn select_children(
+        &self,
+        selected: HashSet<String>,
+        limit: Option<usize>,
+    ) -> HashSet<String> {
         self.inner.select_children(&selected, limit)
     }
 
-    pub fn select_parents(&self, selected: HashSet<String>, limit: Option<usize>) -> HashSet<String> {
+    pub fn select_parents(
+        &self,
+        selected: HashSet<String>,
+        limit: Option<usize>,
+    ) -> HashSet<String> {
         self.inner.select_parents(&selected, limit)
     }
 
     pub fn topological_sort_grouped(&self) -> PyResult<Vec<Vec<String>>> {
-        self.inner.topological_sort_grouped()
+        self.inner
+            .topological_sort_grouped()
             .map_err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>)
     }
 
