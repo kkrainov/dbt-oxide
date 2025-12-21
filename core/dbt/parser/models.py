@@ -1,12 +1,11 @@
 # New for Python models :p
 import ast
-import random
 from copy import deepcopy
 from functools import reduce
 from itertools import chain
+import random
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
-import dbt.tracking as tracking
 from dbt import utils
 from dbt.artifacts.resources import RefArgs
 from dbt.clients.jinja import get_rendered
@@ -22,6 +21,7 @@ from dbt.flags import get_flags
 from dbt.node_types import ModelLanguage, NodeType
 from dbt.parser.base import SimpleSQLParser
 from dbt.parser.search import FileBlock
+import dbt.tracking as tracking
 from dbt_common.contracts.config.base import merge_config_dicts
 from dbt_common.dataclass_schema import ValidationError
 from dbt_common.exceptions.macros import UndefinedMacroError

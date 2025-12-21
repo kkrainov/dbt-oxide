@@ -1,5 +1,5 @@
-import time
 from dataclasses import dataclass, field
+import time
 from typing import Any, Dict, List, Optional, Sequence
 
 from dbt.artifacts.resources import SourceFileMetadata
@@ -250,9 +250,9 @@ class SemanticModel(GraphResource):
             if measure.reference == measure_reference:
                 measure = measure
 
-        assert (
-            measure is not None
-        ), f"No measure with name ({measure_reference.element_name}) in semantic_model with name ({self.name})"
+        assert measure is not None, (
+            f"No measure with name ({measure_reference.element_name}) in semantic_model with name ({self.name})"
+        )
 
         default_agg_time_dimension = (
             self.defaults.agg_time_dimension if self.defaults is not None else None
@@ -269,17 +269,17 @@ class SemanticModel(GraphResource):
     def checked_agg_time_dimension_for_simple_metric(
         self, metric: Metric
     ) -> TimeDimensionReference:
-        assert (
-            metric.type == MetricType.SIMPLE
-        ), "Only simple metrics can have an agg time dimension."
+        assert metric.type == MetricType.SIMPLE, (
+            "Only simple metrics can have an agg time dimension."
+        )
         metric_agg_params = metric.type_params.metric_aggregation_params
         # There are validations elsewhere to check this for metrics and provide messaging for it.
         assert metric_agg_params, "Simple metrics must have metric_aggregation_params."
         # This indicates a validation bug / dev error, not a user error that should appear
         # in a user's YAML.
-        assert (
-            metric_agg_params.semantic_model == self.name
-        ), "Cannot retrieve the agg time dimension for a metric from a different model "
+        assert metric_agg_params.semantic_model == self.name, (
+            "Cannot retrieve the agg time dimension for a metric from a different model "
+        )
         f"than the one that the metric belongs to. Metric `{metric.name}` belongs to model "
         f"`{metric_agg_params.semantic_model}`, but we requested the agg time dimension from model `{self.name}`."
 

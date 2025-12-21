@@ -1,5 +1,5 @@
-import time
 from dataclasses import dataclass, field
+import time
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 from dbt.artifacts.resources import DependsOn, NodeVersion

@@ -1,8 +1,8 @@
-import csv
-import os
 from copy import deepcopy
+import csv
 from csv import DictReader
 from io import StringIO
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
@@ -154,7 +154,6 @@ class UnitTestManifestLoader:
                 NodeType.Seed,
                 NodeType.Snapshot,
             ):
-
                 input_node = ModelNode(
                     **common_fields,
                     defer_relation=original_input_node.defer_relation,

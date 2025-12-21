@@ -1,9 +1,9 @@
+from abc import ABCMeta, abstractmethod
+from dataclasses import dataclass, field
 import datetime
 import pathlib
 import re
 import time
-from abc import ABCMeta, abstractmethod
-from dataclasses import dataclass, field
 from typing import (
     Any,
     Callable,
@@ -439,7 +439,6 @@ class YamlReader(metaclass=ABCMeta):
 
         # for each dict in the data (which is a list of dicts)
         for entry in data:
-
             # check that entry is a dict and that all dict values
             # are strings
             if coerce_dict_str(entry) is None:

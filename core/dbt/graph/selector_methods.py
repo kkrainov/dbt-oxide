@@ -124,7 +124,6 @@ class SelectorMethod(metaclass=abc.ABCMeta):
     def parsed_nodes(
         self, included_nodes: Set[UniqueId]
     ) -> Iterator[Tuple[UniqueId, ManifestNode]]:
-
         for key, node in self.manifest.nodes.items():
             unique_id = UniqueId(key)
             if unique_id not in included_nodes:
@@ -134,7 +133,6 @@ class SelectorMethod(metaclass=abc.ABCMeta):
     def source_nodes(
         self, included_nodes: Set[UniqueId]
     ) -> Iterator[Tuple[UniqueId, SourceDefinition]]:
-
         for key, source in self.manifest.sources.items():
             unique_id = UniqueId(key)
             if unique_id not in included_nodes:
@@ -142,7 +140,6 @@ class SelectorMethod(metaclass=abc.ABCMeta):
             yield unique_id, source
 
     def exposure_nodes(self, included_nodes: Set[UniqueId]) -> Iterator[Tuple[UniqueId, Exposure]]:
-
         for key, exposure in self.manifest.exposures.items():
             unique_id = UniqueId(key)
             if unique_id not in included_nodes:
@@ -150,7 +147,6 @@ class SelectorMethod(metaclass=abc.ABCMeta):
             yield unique_id, exposure
 
     def metric_nodes(self, included_nodes: Set[UniqueId]) -> Iterator[Tuple[UniqueId, Metric]]:
-
         for key, metric in self.manifest.metrics.items():
             unique_id = UniqueId(key)
             if unique_id not in included_nodes:
@@ -175,7 +171,6 @@ class SelectorMethod(metaclass=abc.ABCMeta):
     def semantic_model_nodes(
         self, included_nodes: Set[UniqueId]
     ) -> Iterator[Tuple[UniqueId, SemanticModel]]:
-
         for key, semantic_model in self.manifest.semantic_models.items():
             unique_id = UniqueId(key)
             if unique_id not in included_nodes:
@@ -185,7 +180,6 @@ class SelectorMethod(metaclass=abc.ABCMeta):
     def saved_query_nodes(
         self, included_nodes: Set[UniqueId]
     ) -> Iterator[Tuple[UniqueId, SavedQuery]]:
-
         for key, saved_query in self.manifest.saved_queries.items():
             unique_id = UniqueId(key)
             if unique_id not in included_nodes:
@@ -764,7 +758,7 @@ class StateSelectorMethod(SelectorMethod):
             checker = state_checks[selector]
         else:
             raise DbtRuntimeError(
-                f'Got an invalid selector "{selector}", expected one of ' f'"{list(state_checks)}"'
+                f'Got an invalid selector "{selector}", expected one of "{list(state_checks)}"'
             )
 
         manifest: Manifest = self.previous_state.manifest
@@ -833,7 +827,6 @@ class ResultSelectorMethod(SelectorMethod):
 
 class SourceStatusSelectorMethod(SelectorMethod):
     def search(self, included_nodes: Set[UniqueId], selector: str) -> Iterator[UniqueId]:
-
         if self.previous_state is None or self.previous_state.sources is None:
             raise DbtInternalError(
                 "No previous state comparison freshness results in sources.json"
@@ -951,7 +944,6 @@ class MethodManager:
         self.previous_state = previous_state
 
     def get_method(self, method: MethodName, method_arguments: List[str]) -> SelectorMethod:
-
         if method not in self.SELECTOR_METHODS:
             raise DbtInternalError(
                 f'Method name "{method}" is a valid node selection '

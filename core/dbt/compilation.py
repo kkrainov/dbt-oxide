@@ -1,15 +1,10 @@
-import dataclasses
-import json
-import os
-import pickle
 from collections import defaultdict, deque
+import dataclasses
+import os
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
-# import networkx as nx  # type: ignore
-import dbt_rs
 import sqlparse
 
-import dbt.tracking
 from dbt.adapters.factory import get_adapter
 from dbt.clients import jinja
 from dbt.context.providers import (
@@ -39,13 +34,16 @@ from dbt.exceptions import (
 from dbt.flags import get_flags
 from dbt.graph import Graph
 from dbt.node_types import ModelLanguage, NodeType
+import dbt.tracking
 from dbt_common.clients.system import make_directory
 from dbt_common.contracts.constraints import ConstraintType
 from dbt_common.events.contextvars import get_node_info
 from dbt_common.events.format import pluralize
 from dbt_common.events.functions import fire_event
-from dbt_common.events.types import Note
 from dbt_common.invocation import get_invocation_id
+
+# import networkx as nx  # type: ignore
+import dbt_rs
 
 graph_file_name = "graph.gpickle"
 
@@ -137,7 +135,9 @@ class Linker:
         self.graph = dbt_rs.DbtGraph()
         # TODO: Handle data if not empty?
         if data:
-            raise NotImplementedError("Initializing Linker with data is not supported with dbt-oxide yet.")
+            raise NotImplementedError(
+                "Initializing Linker with data is not supported with dbt-oxide yet."
+            )
 
     def edges(self):
         return self.graph.edges()
@@ -315,9 +315,7 @@ class Linker:
             graph.add_edge(e[0], e[1], edge_type="parent_test")
 
     @staticmethod
-    def _get_test_edges_2(
-        graph: Any, manifest: Manifest
-    ) -> Iterable[Tuple[UniqueID, UniqueID]]:
+    def _get_test_edges_2(graph: Any, manifest: Manifest) -> Iterable[Tuple[UniqueID, UniqueID]]:
         # This function enforces the same execution behavior as add_test_edges,
         # but executes far more quickly and adds far fewer edges. See the
         # HISTORICAL NOTE above.
@@ -704,7 +702,7 @@ class Compiler:
         if self.config.args.which != "list":
             stats = _generate_stats(manifest)
             print_compile_stats(stats)
-        
+
         # We need to return a dbt.graph.Graph, but that expects a networkx graph.
         # So we might need to adapt dbt.graph.Graph too.
         # For now, let's pass the dbt_rs graph if possible or Mock it.

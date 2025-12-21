@@ -1,18 +1,16 @@
-import json
 from hashlib import sha1
+import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
 
-import dbt.deprecations
-import dbt.exceptions
-import dbt.utils
 from dbt.config import Project
 from dbt.config.project import load_yml_dict, package_config_from_data
 from dbt.config.renderer import PackageRenderer
 from dbt.constants import PACKAGE_LOCK_FILE_NAME, PACKAGE_LOCK_HASH_KEY
 from dbt.contracts.project import PackageSpec
+import dbt.deprecations
 from dbt.deps.base import downloads_directory
 from dbt.deps.registry import RegistryPinnedPackage
 from dbt.deps.resolver import resolve_lock_packages, resolve_packages
@@ -28,7 +26,9 @@ from dbt.events.types import (
     DepsUpdateAvailable,
     DepsUpToDate,
 )
+import dbt.exceptions
 from dbt.task.base import BaseTask, move_to_nearest_project_dir
+import dbt.utils
 from dbt_common.clients import system
 from dbt_common.events.functions import fire_event
 from dbt_common.events.types import Formatting

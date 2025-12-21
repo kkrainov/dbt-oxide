@@ -1,8 +1,8 @@
+from datetime import date, datetime
 import json
 import os
-import re
-from datetime import date, datetime
 from pathlib import Path
+import re
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 import jsonschema
@@ -169,7 +169,6 @@ def jsonschema_validate(schema: Dict[str, Any], json: Dict[str, Any], file_path:
                 key_path = error_path_to_string(error)
                 for key in keys:
                     if key == "overrides" and key_path.startswith("sources"):
-
                         deprecations.warn(
                             "source-override-deprecation",
                             source_name=key_path.split(".")[-1],

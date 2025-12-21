@@ -47,8 +47,8 @@ cd dbt-oxide
 # Install uv (if not already installed)
 pip install uv
 
-# Install dependencies
-uv sync
+# Install all dependencies (dbt-core, pytest, dbt-postgres, etc.)
+uv sync --group dev
 
 # Build the Rust extension
 uv run maturin develop --release
@@ -106,6 +106,13 @@ cargo test --no-default-features --manifest-path src/dbt_rs/Cargo.toml
 ```bash
 # Work in core/dbt/
 vim core/dbt/your_file.py
+
+# Format and lint code
+uv run ruff check core/dbt --fix
+uv run ruff format core/dbt
+
+# Type check (optional)
+uv run mypy core/dbt
 
 # Rebuild Rust extension if you changed Rust code
 uv run maturin develop --release
@@ -230,9 +237,17 @@ pub fn ancestors(&self, node: &str) -> Result<HashSet<String>> {
 ### Python Code
 
 **Style:**
+- Use `uv run ruff check core/dbt --fix` for linting (enforced in CI)
+- Use `uv run ruff format core/dbt` for code formatting (enforced in CI)
 - Write type hints for new/modified functions
 - Follow existing code patterns (this is a wrapper layer)
 - Keep wrapper logic minimal - delegate to Rust
+
+**Pre-commit hooks:** Install with `pre-commit install`. Runs automatically on commit:
+- `ruff` - Linting with auto-fix
+- `ruff-format` - Code formatting
+- `mypy` - Type checking
+- Standard checks (yaml, json, trailing whitespace)
 
 **Rules:**
 - Don't modify existing unit tests unless changing behavior
@@ -270,7 +285,7 @@ def ancestors(self, node: str) -> Set[str]:
 
 Before submitting, ensure:
 
-- [ ] Code follows style guidelines (`cargo fmt`, type hints)
+- [ ] Code follows style guidelines (cargo fmt, ruff check, ruff format, type hints)
 - [ ] All tests pass locally
 - [ ] Commits are signed with DCO (`git commit -s`)
 - [ ] Rust code passes clippy
@@ -286,6 +301,55 @@ Before submitting, ensure:
 4. **Approval** - Once approved, a maintainer will merge
 
 **Review time:** We aim to review PRs within 1 week.
+
+---
+
+## Release Process
+
+### Version Numbering
+
+dbt-oxide follows [Semantic Versioning](https://semver.org/):
+- **MAJOR.MINOR.PATCH** (e.g., `0.2.0`)
+- **MAJOR**: Breaking changes
+- **MINOR**: New features (backward compatible)
+- **PATCH**: Bug fixes (backward compatible)
+
+### Creating a Release
+
+Releases are created by maintainers through GitHub Releases:
+
+1. **Ensure CHANGELOG.md is up to date**
+   ```bash
+   git cliff --tag v0.2.0 --prepend CHANGELOG.md
+   git commit -m "chore: update changelog for v0.2.0"
+   ```
+
+2. **Create and push tag**
+   ```bash
+   git tag -a v0.2.0 -m "Release v0.2.0"
+   git push origin v0.2.0
+   ```
+
+3. **GitHub Actions will automatically:**
+   - Build wheels for all platforms
+   - Create GitHub Release with binaries
+   - Publish to PyPI (if configured)
+
+### Changelog is Auto-Generated
+
+Thanks to **git-cliff**, the changelog is generated from commit messages. This is why following [Conventional Commits](https://www.conventionalcommits.org/) format is important!
+
+**Example:**
+```
+feat: add parallel graph processing
+fix: handle empty manifest edge case
+docs: update architecture documentation
+```
+
+These commits automatically become changelog entries:
+- `feat:` → **Features** section
+- `fix:` → **Bug Fixes** section
+- `docs:` → **Documentation** section
 
 ---
 

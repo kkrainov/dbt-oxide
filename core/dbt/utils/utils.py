@@ -1,13 +1,13 @@
 import collections
+from datetime import date, datetime, time, timezone
 import decimal
+from enum import Enum
 import functools
 import itertools
 import json
 import os
-import sys
-from datetime import date, datetime, time, timezone
-from enum import Enum
 from pathlib import PosixPath, WindowsPath
+import sys
 from typing import (
     AbstractSet,
     Any,

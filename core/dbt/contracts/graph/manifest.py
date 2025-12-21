@@ -1,6 +1,6 @@
-import enum
 from collections import defaultdict
 from dataclasses import dataclass, field, replace
+import enum
 from itertools import chain
 from multiprocessing.synchronize import Lock
 from typing import (
@@ -22,8 +22,6 @@ from typing import (
 
 from typing_extensions import Protocol
 
-import dbt_common.exceptions
-import dbt_common.utils
 from dbt import deprecations, tracking
 from dbt.adapters.exceptions import (
     DuplicateMacroInPackageError,
@@ -84,7 +82,9 @@ from dbt.node_types import (
 from dbt_common.dataclass_schema import dbtClassMixin
 from dbt_common.events.contextvars import get_node_info
 from dbt_common.events.functions import fire_event
+import dbt_common.exceptions
 from dbt_common.helper_types import PathSet
+import dbt_common.utils
 
 PackageName = str
 DocName = str
@@ -1337,7 +1337,6 @@ class Manifest(MacroMethods, dbtClassMixin):
         current_project: str,
         node_package: str,
     ) -> MaybeNonSource:
-
         node: Optional[ManifestNode] = None
         disabled: Optional[List[ManifestNode]] = None
 
@@ -1399,7 +1398,6 @@ class Manifest(MacroMethods, dbtClassMixin):
         current_project: str,
         node_package: str,
     ) -> MaybeMetricNode:
-
         metric: Optional[Metric] = None
         disabled: Optional[List[Metric]] = None
 

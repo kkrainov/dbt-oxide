@@ -62,7 +62,7 @@ class ListTask(GraphRunnableTask):
                 raise DbtRuntimeError('"models" and "select" are mutually exclusive arguments')
             if self.args.resource_types:
                 raise DbtRuntimeError(
-                    '"models" and "resource_type" are mutually exclusive ' "arguments"
+                    '"models" and "resource_type" are mutually exclusive arguments'
                 )
 
     def _iterate_selected_nodes(self):

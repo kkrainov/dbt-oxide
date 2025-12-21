@@ -1,10 +1,10 @@
-import os
-import sys
 from dataclasses import dataclass
 from datetime import datetime
 from importlib import import_module
+import os
 from pathlib import Path
 from pprint import pformat as pf
+import sys
 from typing import Any, Callable, Dict, List, Optional, Set, Union
 
 from click import Context, Parameter, get_current_context
@@ -58,7 +58,7 @@ WHICH_KEY = "which"
 def convert_config(config_name, config_value):
     """Convert the values from config and original set_from_args to the correct type."""
     ret = config_value
-    if config_name.lower() == "warn_error_options" and type(config_value) == dict:
+    if config_name.lower() == "warn_error_options" and isinstance(config_value, dict):
         normalize_warn_error_options(ret)
         ret = WarnErrorOptionsV2(
             error=config_value.get("error", []),
@@ -367,7 +367,6 @@ class Flags:
 
         # only do validations if at least one of `event_time_start` or `event_time_end` are specified
         if event_time_start is not None or event_time_end is not None:
-
             # These `ifs`, combined with the parent `if` make it so that `event_time_start` and
             # `event_time_end` are mutually required
             if event_time_start is None:

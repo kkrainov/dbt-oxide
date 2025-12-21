@@ -1,16 +1,13 @@
 # coding=utf-8
-import importlib
-import os
-import platform
-import sys
 from collections import namedtuple
 from enum import Flag
+import importlib
+import os
 from pathlib import Path
+import platform
+import sys
 from typing import Any, Dict, List, Optional, Tuple
 
-import dbt.exceptions
-import dbt_common.clients.system
-import dbt_common.exceptions
 from dbt.adapters.factory import get_adapter, register_adapter
 from dbt.artifacts.schemas.results import RunStatus
 from dbt.cli.flags import Flags
@@ -18,12 +15,15 @@ from dbt.clients.yaml_helper import load_yaml_text
 from dbt.config import PartialProject, Profile, Project
 from dbt.config.renderer import DbtProjectYamlRenderer, ProfileRenderer
 from dbt.events.types import DebugCmdOut, DebugCmdResult, OpenCommand
+import dbt.exceptions
 from dbt.links import ProfileConfigDocs
 from dbt.mp_context import get_mp_context
 from dbt.task.base import BaseTask, get_nearest_project_dir
 from dbt.version import get_installed_version
+import dbt_common.clients.system
 from dbt_common.events.format import pluralize
 from dbt_common.events.functions import fire_event
+import dbt_common.exceptions
 from dbt_common.ui import green, red
 
 ONLY_PROFILE_MESSAGE = """
@@ -344,7 +344,7 @@ class DebugTask(BaseTask):
                 run_status=RunStatus.Error,
                 details=str(exc),
                 summary_message=(
-                    f"Project loading failed for the following reason:" f"\n{str(exc)}" f"\n"
+                    f"Project loading failed for the following reason:\n{str(exc)}\n"
                 ),
             )
         else:

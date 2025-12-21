@@ -1,7 +1,7 @@
-import os
 from copy import deepcopy
 from dataclasses import dataclass, field
 from itertools import chain
+import os
 from typing import Any, Dict, List, Mapping, Optional, TypeVar, Union
 
 from typing_extensions import Protocol, runtime_checkable
@@ -21,9 +21,8 @@ from dbt.constants import (
     PACKAGE_LOCK_HASH_KEY,
     PACKAGES_FILE_NAME,
 )
-from dbt.contracts.project import PackageConfig
+from dbt.contracts.project import PackageConfig, ProjectFlags, ProjectPackageMetadata, SemverString
 from dbt.contracts.project import Project as ProjectContract
-from dbt.contracts.project import ProjectFlags, ProjectPackageMetadata, SemverString
 from dbt.exceptions import (
     DbtExclusivePropertyUseError,
     DbtProjectError,
@@ -222,7 +221,7 @@ def load_raw_project(project_root: str, validate: bool = False) -> Dict[str, Any
 
 
 def _query_comment_from_cfg(
-    cfg_query_comment: Union[QueryComment, NoValue, str, None]
+    cfg_query_comment: Union[QueryComment, NoValue, str, None],
 ) -> QueryComment:
     if not cfg_query_comment:
         return QueryComment(comment="")

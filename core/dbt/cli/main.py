@@ -1,12 +1,11 @@
-import functools
 from copy import copy
 from dataclasses import dataclass
+import functools
 from typing import Callable, List, Optional, Union
 
 import click
-from click.exceptions import BadOptionUsage
+from click.exceptions import BadOptionUsage, NoSuchOption, UsageError
 from click.exceptions import Exit as ClickExit
-from click.exceptions import NoSuchOption, UsageError
 
 from dbt.adapters.factory import register_adapter
 from dbt.artifacts.schemas.catalog import CatalogArtifact

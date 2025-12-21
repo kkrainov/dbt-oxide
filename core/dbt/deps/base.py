@@ -1,9 +1,9 @@
 import abc
+from contextlib import contextmanager
 import functools
 import os
-import tempfile
-from contextlib import contextmanager
 from pathlib import Path
+import tempfile
 from typing import Dict, Generic, List, Optional, TypeVar
 
 from dbt.contracts.project import ProjectPackageMetadata

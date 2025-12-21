@@ -1,14 +1,14 @@
+from contextlib import contextmanager
+from datetime import datetime
 import os
 import platform
 import traceback
-import uuid
-from contextlib import contextmanager
-from datetime import datetime
 from typing import Optional
+import uuid
 
+from packaging.version import Version
 import pytz
 import requests
-from packaging.version import Version
 from snowplow_tracker import Emitter, SelfDescribingJson, Subject, Tracker
 from snowplow_tracker import __version__ as snowplow_version  # type: ignore
 from snowplow_tracker import logger as sp_logger
@@ -314,9 +314,9 @@ def track_rpc_request(options):
 
 
 def get_base_invocation_context():
-    assert (
-        active_user is not None
-    ), "initialize active user before calling get_base_invocation_context"
+    assert active_user is not None, (
+        "initialize active user before calling get_base_invocation_context"
+    )
     return {
         "project_id": None,
         "user_id": active_user.id,
@@ -353,7 +353,6 @@ def track_package_install(command_name: str, project_hashed_name: Optional[str],
 
 
 def track_deprecation_warn(options):
-
     assert active_user is not None, "Cannot track deprecation warnings when active user is None"
 
     context = [SelfDescribingJson(DEPRECATION_WARN_SPEC, options)]
@@ -412,9 +411,9 @@ def track_invalid_invocation(args=None, result_type=None):
 
 def track_experimental_parser_sample(options):
     context = [SelfDescribingJson(EXPERIMENTAL_PARSER, options)]
-    assert (
-        active_user is not None
-    ), "Cannot track experimental parser info when active user is None"
+    assert active_user is not None, (
+        "Cannot track experimental parser info when active user is None"
+    )
 
     track(
         active_user,

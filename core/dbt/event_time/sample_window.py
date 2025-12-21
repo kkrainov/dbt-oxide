@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
-import pytz
 from attr import dataclass
+import pytz
 
 from dbt.artifacts.resources.types import BatchSize
 from dbt.event_time.event_time import offset_timestamp

@@ -1,7 +1,7 @@
 # special support for CLI argument parsing.
 # TODO: Remove as part of https://github.com/dbt-labs/dbt-core/issues/6701
-import itertools
 from copy import deepcopy
+import itertools
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from dbt.clients.yaml_helper import Dumper, Loader, yaml  # noqa: F401
@@ -55,8 +55,6 @@ def parse_union(
 
 
 def parse_union_from_default(raw: Optional[List[str]], default: List[str]) -> SelectionUnion:
-    components: List[str]
-    expect_exists: bool
     if raw is None:
         return parse_union(components=default, expect_exists=False)
     else:
@@ -66,7 +64,6 @@ def parse_union_from_default(raw: Optional[List[str]], default: List[str]) -> Se
 def parse_difference(
     include: Optional[List[str]], exclude: Optional[List[str]]
 ) -> SelectionDifference:
-
     if include == ():
         include = None
 
@@ -170,7 +167,7 @@ def parse_dict_definition(definition: Dict[str, Any], result={}) -> SelectionSpe
         value = definition[key]
         if not isinstance(key, str):
             raise DbtValidationError(
-                f'Expected definition key to be a "str", got one of type ' f'"{type(key)}" ({key})'
+                f'Expected definition key to be a "str", got one of type "{type(key)}" ({key})'
             )
         dct = {
             "method": key,
@@ -188,8 +185,7 @@ def parse_dict_definition(definition: Dict[str, Any], result={}) -> SelectionSpe
             dct = {k: v for k, v in dct.items() if k != "exclude"}
     else:
         raise DbtValidationError(
-            f'Expected either 1 key or else "method" '
-            f'and "value" keys, but got {list(definition)}'
+            f'Expected either 1 key or else "method" and "value" keys, but got {list(definition)}'
         )
 
     # if key isn't a valid method name, this will raise
@@ -205,7 +201,6 @@ def parse_from_definition(
     rootlevel=False,
     result: Dict[str, Dict[str, Union[SelectionSpec, bool]]] = {},
 ) -> SelectionSpec:
-
     if (
         isinstance(definition, dict)
         and ("union" in definition or "intersection" in definition)

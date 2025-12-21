@@ -1,8 +1,8 @@
+from http.server import SimpleHTTPRequestHandler
 import os
 import shutil
 import socketserver
 import webbrowser
-from http.server import SimpleHTTPRequestHandler
 
 import click
 

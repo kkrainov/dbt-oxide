@@ -98,16 +98,15 @@ class SchemaGenericTestParser(SimpleParser):
         column_name: Optional[str],
         description: str,
     ) -> GenericTestNode:
-
         HASH_LENGTH = 10
 
         # N.B: This function builds a hashable string from any given test_metadata dict.
         #   it's a bit fragile for general use (only supports str, int, float, List, Dict)
         #   but it gets the job done here without the overhead of complete ser(de).
         def get_hashable_md(data: Union[str, int, float, List, Dict]) -> Union[str, List, Dict]:
-            if type(data) == dict:
+            if isinstance(data, dict):
                 return {k: get_hashable_md(data[k]) for k in sorted(data.keys())}  # type: ignore
-            elif type(data) == list:
+            elif isinstance(data, list):
                 return [get_hashable_md(val) for val in data]  # type: ignore
             else:
                 return str(data)

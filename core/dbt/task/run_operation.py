@@ -1,10 +1,9 @@
+from datetime import datetime, timezone
 import os
 import threading
 import traceback
-from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List
 
-import dbt_common.exceptions
 from dbt.adapters.factory import get_adapter
 from dbt.artifacts.schemas.results import RunStatus, TimingInfo, collect_timing_info
 from dbt.artifacts.schemas.run import RunResult, RunResultsArtifact
@@ -20,6 +19,7 @@ from dbt.events.types import (
 from dbt.node_types import NodeType
 from dbt.task.base import ConfiguredTask
 from dbt_common.events.functions import fire_event
+import dbt_common.exceptions
 
 if TYPE_CHECKING:
     import agate

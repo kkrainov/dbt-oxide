@@ -1,7 +1,7 @@
-import itertools
-import os
 from copy import deepcopy
 from dataclasses import dataclass
+import itertools
+import os
 from pathlib import Path
 from typing import (
     Any,

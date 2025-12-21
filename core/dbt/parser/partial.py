@@ -1,5 +1,5 @@
-import os
 from copy import deepcopy
+import os
 from typing import Callable, Dict, List, MutableMapping, Union
 
 from dbt.constants import DEFAULT_ENV_PLACEHOLDER
@@ -319,7 +319,6 @@ class PartialParsing:
     # tests: not touched by schema files (no patches, no tests)
     # Updated schema files should have been processed already.
     def update_mssat_in_saved(self, new_source_file, old_source_file):
-
         if self.already_scheduled_for_parsing(old_source_file):
             return
 

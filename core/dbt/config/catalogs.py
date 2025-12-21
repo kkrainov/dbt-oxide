@@ -1,5 +1,5 @@
-import os
 from copy import deepcopy
+import os
 from typing import Any, Dict, List, Optional
 
 from dbt.artifacts.resources import Catalog, CatalogWriteIntegrationConfig

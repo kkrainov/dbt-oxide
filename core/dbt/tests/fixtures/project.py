@@ -1,14 +1,13 @@
-import os
-import random
 from argparse import Namespace
 from datetime import datetime, timezone
+import os
 from pathlib import Path
+import random
 from typing import Mapping
 
 import pytest  # type: ignore
 import yaml
 
-import dbt.flags as flags
 from dbt.adapters.factory import (
     get_adapter,
     get_adapter_by_type,
@@ -19,6 +18,7 @@ from dbt.config.runtime import RuntimeConfig
 from dbt.context.providers import generate_runtime_macro_context
 from dbt.deprecations import reset_deprecations
 from dbt.events.logging import setup_event_logger
+import dbt.flags as flags
 from dbt.mp_context import get_mp_context
 from dbt.parser.manifest import ManifestLoader
 from dbt.tests.util import (

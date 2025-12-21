@@ -1,13 +1,12 @@
+from functools import update_wrapper
 import importlib.util
 import os
 import time
 import traceback
-from functools import update_wrapper
 from typing import Dict, Optional
 
 from click import Context
 
-import dbt.tracking
 from dbt.adapters.factory import adapter_management, get_adapter, register_adapter
 from dbt.cli.exceptions import ExceptionExit, ResultExit
 from dbt.cli.flags import Flags
@@ -35,6 +34,7 @@ from dbt.mp_context import get_mp_context
 from dbt.parser.manifest import parse_manifest
 from dbt.plugins import set_up_plugin_manager
 from dbt.profiler import profiler
+import dbt.tracking
 from dbt.tracking import active_user, initialize_from_flags, track_run
 from dbt.utils import try_get_max_rss_kb
 from dbt.utils.artifact_upload import upload_artifacts

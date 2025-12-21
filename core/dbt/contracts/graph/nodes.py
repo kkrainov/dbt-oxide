@@ -1,7 +1,7 @@
-import hashlib
-import os
 from dataclasses import dataclass, field
 from datetime import datetime
+import hashlib
+import os
 from pathlib import Path
 from typing import (
     Any,
@@ -28,28 +28,27 @@ from dbt.artifacts.resources import (
     CompiledResource,
     DependsOn,
     Docs,
-)
-from dbt.artifacts.resources import Documentation as DocumentationResource
-from dbt.artifacts.resources import Exposure as ExposureResource
-from dbt.artifacts.resources import FileHash
-from dbt.artifacts.resources import GenericTest as GenericTestResource
-from dbt.artifacts.resources import GraphResource
-from dbt.artifacts.resources import Group as GroupResource
-from dbt.artifacts.resources import HasRelationMetadata as HasRelationMetadataResource
-from dbt.artifacts.resources import HookNode as HookNodeResource
-from dbt.artifacts.resources import InjectedCTE
-from dbt.artifacts.resources import Macro as MacroResource
-from dbt.artifacts.resources import MacroArgument
-from dbt.artifacts.resources import Metric as MetricResource
-from dbt.artifacts.resources import MetricInputMeasure
-from dbt.artifacts.resources import Model as ModelResource
-from dbt.artifacts.resources import (
+    FileHash,
+    GraphResource,
+    InjectedCTE,
+    MacroArgument,
+    MetricInputMeasure,
     ModelConfig,
     NodeConfig,
     NodeVersion,
     ParsedResource,
     ParsedResourceMandatory,
+    TimeSpine,
 )
+from dbt.artifacts.resources import Documentation as DocumentationResource
+from dbt.artifacts.resources import Exposure as ExposureResource
+from dbt.artifacts.resources import GenericTest as GenericTestResource
+from dbt.artifacts.resources import Group as GroupResource
+from dbt.artifacts.resources import HasRelationMetadata as HasRelationMetadataResource
+from dbt.artifacts.resources import HookNode as HookNodeResource
+from dbt.artifacts.resources import Macro as MacroResource
+from dbt.artifacts.resources import Metric as MetricResource
+from dbt.artifacts.resources import Model as ModelResource
 from dbt.artifacts.resources import Quoting as QuotingResource
 from dbt.artifacts.resources import SavedQuery as SavedQueryResource
 from dbt.artifacts.resources import Seed as SeedResource
@@ -58,7 +57,6 @@ from dbt.artifacts.resources import SingularTest as SingularTestResource
 from dbt.artifacts.resources import Snapshot as SnapshotResource
 from dbt.artifacts.resources import SourceDefinition as SourceDefinitionResource
 from dbt.artifacts.resources import SqlOperation as SqlOperationResource
-from dbt.artifacts.resources import TimeSpine
 from dbt.artifacts.resources import UnitTestDefinition as UnitTestDefinitionResource
 from dbt.artifacts.resources.v1.model import ModelFreshness
 from dbt.artifacts.schemas.batch_results import BatchResults
@@ -716,9 +714,9 @@ class ModelNode(ModelResource, CompiledNode):
         contract_enforced_disabled: bool = False
         columns_removed: List[str] = []
         column_type_changes: List[Dict[str, str]] = []
-        enforced_column_constraint_removed: List[Dict[str, str]] = (
-            []
-        )  # column_name, constraint_type
+        enforced_column_constraint_removed: List[
+            Dict[str, str]
+        ] = []  # column_name, constraint_type
         enforced_model_constraint_removed: List[Dict[str, Any]] = []  # constraint_type, columns
         materialization_changed: List[str] = []
 
@@ -805,7 +803,6 @@ class ModelNode(ModelResource, CompiledNode):
             or enforced_column_constraint_removed
             or materialization_changed
         ):
-
             breaking_changes = []
             if contract_enforced_disabled:
                 breaking_changes.append(
@@ -905,7 +902,6 @@ class SeedNode(SeedResource, ParsedNode):  # No SQLDefaults!
         result = self.checksum == other.checksum
 
         if self.checksum.name == "path":
-            msg: str
             if other.checksum.name != "path":
                 warn_or_error(
                     SeedIncreased(package_name=self.package_name, name=self.name), node=self
@@ -1274,7 +1270,6 @@ class SourceDefinition(
         return SourceDefinitionResource
 
     def same_database_representation(self, other: "SourceDefinition") -> bool:
-
         # preserve legacy behaviour -- use potentially rendered database
         if get_flags().state_modified_compare_more_unrendered_values is False:
             same_database = self.database == other.database

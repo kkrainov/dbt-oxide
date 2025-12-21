@@ -1,22 +1,17 @@
+from copy import deepcopy
+from dataclasses import dataclass, field
+from datetime import date, datetime, timezone
+from itertools import chain
 import json
 import os
 import pprint
 import time
 import traceback
-from copy import deepcopy
-from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
-from itertools import chain
 from typing import Any, Callable, Dict, List, Mapping, Optional, Set, Tuple, Type, Union
 
-import msgpack
 from jinja2.nodes import Call
+import msgpack
 
-import dbt.deprecations
-import dbt.exceptions
-import dbt.tracking
-import dbt.utils
-import dbt_common.utils
 from dbt import plugins
 from dbt.adapters.capability import Capability
 from dbt.adapters.factory import (
@@ -69,6 +64,7 @@ from dbt.contracts.graph.nodes import (
     SourceDefinition,
 )
 from dbt.contracts.graph.semantic_manifest import SemanticManifest
+import dbt.deprecations
 from dbt.events.types import (
     ArtifactWritten,
     DeprecatedModel,
@@ -88,6 +84,7 @@ from dbt.events.types import (
     UnableToPartialParse,
     UpcomingReferenceDeprecation,
 )
+import dbt.exceptions
 from dbt.exceptions import (
     AmbiguousAliasError,
     InvalidAccessTypeError,
@@ -120,6 +117,8 @@ from dbt.parser.singular_test import SingularTestParser
 from dbt.parser.snapshots import SnapshotParser
 from dbt.parser.sources import SourcePatcher
 from dbt.parser.unit_tests import process_models_for_unit_test
+import dbt.tracking
+import dbt.utils
 from dbt.utils.artifact_upload import add_artifact_produced
 from dbt.version import __version__
 from dbt_common.clients.jinja import parse
@@ -131,6 +130,7 @@ from dbt_common.events.functions import fire_event, get_invocation_id, warn_or_e
 from dbt_common.events.types import Note
 from dbt_common.exceptions.base import DbtValidationError
 from dbt_common.helper_types import PathSet
+import dbt_common.utils
 from dbt_semantic_interfaces.enum_extension import assert_values_exhausted
 from dbt_semantic_interfaces.type_enums import MetricType
 
@@ -531,30 +531,31 @@ class ManifestLoader:
     def _sync_manifest_to_rust(self) -> None:
         """Serialize manifest to Rust for zero-copy access."""
         import time
+
         try:
             import dbt_rs
-            
+
             start = time.perf_counter()
-            
+
             # Use mashumaro's to_dict for efficient serialization
             writable = self.manifest.writable_manifest()
             import json
+
             json_str = json.dumps(writable.to_dict())
-            
+
             # Load into Rust
             dbt_rs.load_manifest(json_str)
-            
+
             elapsed_ms = (time.perf_counter() - start) * 1000
             fire_event(Note(msg=f"dbt-oxide: Manifest synced to Rust in {elapsed_ms:.1f}ms"))
-            
+
         except ImportError:
             # dbt_rs not available - non-oxide build
             pass
         except Exception as e:
             from dbt.exceptions import DbtRuntimeError
-            raise DbtRuntimeError(
-                f"Failed to sync manifest to Rust engine: {e}"
-            ) from e
+
+            raise DbtRuntimeError(f"Failed to sync manifest to Rust engine: {e}") from e
 
     def safe_update_project_parser_files_partially(self, project_parser_files: Dict) -> Dict:
         if self.saved_manifest is None:
@@ -745,7 +746,6 @@ class ManifestLoader:
         parser_files,
         parser_types: List[Type[Parser]],
     ) -> None:
-
         project_loader_info = self._perf_info._project_index[project.project_name]
         start_timer = time.perf_counter()
         total_parsed_path_count = 0
@@ -981,7 +981,9 @@ class ManifestLoader:
             try:
                 with open(path, "rb") as fp:
                     manifest_mp = fp.read()
-                manifest: Manifest = Manifest.from_msgpack(manifest_mp, decoder=extended_mashumuro_decoder)  # type: ignore
+                manifest: Manifest = Manifest.from_msgpack(
+                    manifest_mp, decoder=extended_mashumuro_decoder
+                )  # type: ignore
                 # keep this check inside the try/except in case something about
                 # the file has changed in weird ways, perhaps due to being a
                 # different version of dbt
@@ -1913,18 +1915,18 @@ def _process_metric_node(
         return
 
     if metric.type is MetricType.SIMPLE or metric.type is MetricType.CUMULATIVE:
-        assert (
-            metric.type_params.measure is not None
-        ), f"{metric} should have a measure defined, but it does not."
+        assert metric.type_params.measure is not None, (
+            f"{metric} should have a measure defined, but it does not."
+        )
         metric.add_input_measure(metric.type_params.measure)
         _process_metric_depends_on(
             manifest=manifest, current_project=current_project, metric=metric
         )
     elif metric.type is MetricType.CONVERSION:
         conversion_type_params = metric.type_params.conversion_type_params
-        assert (
-            conversion_type_params
-        ), f"{metric.name} is a conversion metric and must have conversion_type_params defined."
+        assert conversion_type_params, (
+            f"{metric.name} is a conversion metric and must have conversion_type_params defined."
+        )
         metric.add_input_measure(conversion_type_params.base_measure)
         metric.add_input_measure(conversion_type_params.conversion_measure)
         _process_metric_depends_on(

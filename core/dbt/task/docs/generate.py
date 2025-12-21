@@ -1,16 +1,12 @@
-import os
-import shutil
 from dataclasses import replace
 from datetime import datetime, timezone
 from itertools import chain
+import os
+import shutil
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 import agate
 
-import dbt.compilation
-import dbt.exceptions
-import dbt.utils
-import dbt_common.utils.formatting
 from dbt.adapters.events.types import (
     BuildingCatalog,
     CannotGenerateDocs,
@@ -30,10 +26,12 @@ from dbt.artifacts.schemas.catalog import (
     TableMetadata,
 )
 from dbt.artifacts.schemas.results import NodeStatus
+import dbt.compilation
 from dbt.constants import CATALOG_FILENAME, MANIFEST_FILE_NAME
 from dbt.contracts.graph.manifest import Manifest
 from dbt.contracts.graph.nodes import ResultNode
 from dbt.events.types import ArtifactWritten
+import dbt.exceptions
 from dbt.exceptions import AmbiguousCatalogMatchError
 from dbt.graph import ResourceTypeSelector
 from dbt.graph.graph import UniqueId
@@ -41,11 +39,13 @@ from dbt.node_types import EXECUTABLE_NODE_TYPES, NodeType
 from dbt.parser.manifest import write_manifest
 from dbt.task.compile import CompileTask
 from dbt.task.docs import DOCS_INDEX_FILE_PATH
+import dbt.utils
 from dbt.utils.artifact_upload import add_artifact_produced
 from dbt_common.clients.system import load_file_contents
 from dbt_common.dataclass_schema import ValidationError
 from dbt_common.events.functions import fire_event
 from dbt_common.exceptions import DbtInternalError
+import dbt_common.utils.formatting
 
 
 def get_stripped_prefix(source: Dict[str, Any], prefix: str) -> Dict[str, Any]:
@@ -320,7 +320,6 @@ class GenerateTask(CompileTask):
             write_manifest(self.manifest, self.config.project_target_path)
 
         if self.args.static:
-
             # Read manifest.json and catalog.json
             read_manifest_data = load_file_contents(
                 os.path.join(self.config.project_target_path, MANIFEST_FILE_NAME)

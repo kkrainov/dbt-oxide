@@ -1,6 +1,6 @@
+from dataclasses import dataclass, field
 import os
 import pathlib
-from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, MutableMapping, Optional, Protocol
 
 import pathspec  # type: ignore
@@ -48,7 +48,6 @@ def load_source_file(
     project_name: str,
     saved_files,
 ) -> Optional[AnySourceFile]:
-
     if parse_file_type == ParseFileType.Schema:
         sf_cls = SchemaSourceFile
     elif parse_file_type == ParseFileType.Fixture:

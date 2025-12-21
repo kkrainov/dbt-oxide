@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import functools
-import threading
-import time
 from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime, timezone
+import functools
+import threading
+import time
 from typing import AbstractSet, Any, Dict, Iterable, List, Optional, Set, Tuple, Type
 
 from dbt import tracking, utils
@@ -174,9 +174,8 @@ def _validate_materialization_relations_dict(inp: Dict[Any, Any], model) -> List
         raise CompilationError(msg, node=model) from None
 
     if not isinstance(relations_value, list):
-        msg = (
-            'Invalid return value from materialization, "relations" '
-            "not a list, got: {}".format(relations_value)
+        msg = 'Invalid return value from materialization, "relations" not a list, got: {}'.format(
+            relations_value
         )
         raise CompilationError(msg, node=model) from None
 
@@ -504,7 +503,6 @@ class MicrobatchBatchRunner(ModelRunner):
         context: Dict[str, Any],
         materialization_macro: MacroProtocol,
     ) -> RunResult:
-
         batch = self.batches[self.batch_idx]
         # call materialization_macro to get a batch-level run result
         start_time = time.perf_counter()
@@ -936,7 +934,6 @@ class RunTask(CompileTask):
         return package_name, hook.index
 
     def get_hooks_by_type(self, hook_type: RunHookType) -> List[HookNode]:
-
         if self.manifest is None:
             raise DbtInternalError("self.manifest was None in get_hooks_by_type")
 

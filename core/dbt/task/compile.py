@@ -14,9 +14,8 @@ from dbt.task.runnable import GraphRunnableTask
 from dbt_common.events.base_types import EventLevel
 from dbt_common.events.functions import fire_event
 from dbt_common.events.types import Note
-from dbt_common.exceptions import CompilationError
+from dbt_common.exceptions import CompilationError, DbtInternalError
 from dbt_common.exceptions import DbtBaseException as DbtException
-from dbt_common.exceptions import DbtInternalError
 
 
 class CompileRunner(BaseRunner):

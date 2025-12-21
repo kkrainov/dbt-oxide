@@ -1,8 +1,8 @@
+from dataclasses import dataclass
 import io
 import json
 import re
 import threading
-from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -205,7 +205,6 @@ class TestRunner(CompileRunner):
     def execute_unit_test(
         self, unit_test_def: UnitTestDefinition, manifest: Manifest
     ) -> Tuple[UnitTestNode, UnitTestResultData]:
-
         unit_test_manifest = self.build_unit_test_manifest_from_test(unit_test_def, manifest)
 
         # The unit test node and definition have the same unique_id

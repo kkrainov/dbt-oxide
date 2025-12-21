@@ -1,15 +1,11 @@
-import os
-import time
 from abc import abstractmethod
 from concurrent.futures import as_completed
 from datetime import datetime, timezone
+import os
 from pathlib import Path
+import time
 from typing import AbstractSet, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
-import dbt.exceptions
-import dbt.tracking
-import dbt.utils
-import dbt_common.utils.formatting
 from dbt.adapters.base import BaseAdapter, BaseRelation
 from dbt.adapters.factory import get_adapter
 from dbt.artifacts.schemas.results import (
@@ -39,6 +35,7 @@ from dbt.events.types import (
     QueryCancelationUnsupported,
     SkippingDetails,
 )
+import dbt.exceptions
 from dbt.exceptions import DbtInternalError, DbtRuntimeError, FailFastError
 from dbt.flags import get_flags
 from dbt.graph import (
@@ -53,6 +50,8 @@ from dbt.parser.manifest import write_manifest
 from dbt.task import group_lookup
 from dbt.task.base import BaseRunner, ConfiguredTask
 from dbt.task.printer import print_run_end_messages, print_run_result_error
+import dbt.tracking
+import dbt.utils
 from dbt.utils.artifact_upload import add_artifact_produced
 from dbt_common.context import _INVOCATION_CONTEXT_VAR, get_invocation_context
 from dbt_common.dataclass_schema import StrEnum
@@ -60,6 +59,7 @@ from dbt_common.events.contextvars import log_contextvars, task_contextvars
 from dbt_common.events.functions import fire_event, warn_or_error
 from dbt_common.events.types import Formatting
 from dbt_common.exceptions import NotImplementedError
+import dbt_common.utils.formatting
 
 
 class GraphRunnableMode(StrEnum):
@@ -719,7 +719,7 @@ class GraphRunnableTask(ConfiguredTask):
                 if db_schema not in existing_schemas_lowered:
                     existing_schemas_lowered.add(db_schema)
                     fut = tpe.submit_connected(
-                        adapter, f'create_{info.database or ""}_{info.schema}', create_schema, info
+                        adapter, f"create_{info.database or ''}_{info.schema}", create_schema, info
                     )
                     create_futures.append(fut)
 

@@ -1,5 +1,5 @@
-import re
 from copy import deepcopy
+import re
 from typing import Any, Dict, Generic, List, Optional, Tuple
 
 from dbt import deprecations

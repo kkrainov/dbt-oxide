@@ -3,9 +3,9 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Callable, ClassVar, DefaultDict, Dict, List, Optional
 
-import dbt.tracking
 from dbt.events import types as core_types
 from dbt.flags import get_flags
+import dbt.tracking
 from dbt_common.dataclass_schema import dbtClassMixin
 from dbt_common.events.functions import fire_event, warn_or_error
 from dbt_common.events.types import Note
