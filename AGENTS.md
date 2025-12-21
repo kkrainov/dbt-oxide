@@ -3,7 +3,7 @@
 **Codename:** dbt-oxide
 **Base Repository:** Fork of `dbt-labs/dbt-core` (v1.10.16)
 **Architecture:** Strangler Fig Pattern (Python Shell, Rust Core)
-**Goal:** 10x-100x performance improvement in compile/DAG resolution. 100% backward compatibility.
+**Goal:** Substantial performance improvement in compile/DAG resolution through Rust-powered graph algorithms and zero-copy data structures. 100% backward compatibility.
 
 ## Core Mandates
 
