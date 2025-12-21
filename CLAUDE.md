@@ -1,0 +1,1 @@
+- You MUST always read the @AGENTS.md file to get the full context about the project.
