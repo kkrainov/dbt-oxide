@@ -8,7 +8,7 @@ dbt-tests-adapter==1.19.1
 # black must match what's in .pre-commit-config.yaml to be sure local env matches CI
 black==24.3.0
 bumpversion
-ddtrace==2.21.3
+ddtrace==4.1.0
 docutils
 # flake8 must match what's in .pre-commit-config.yaml to be sure local env matches CI
 flake8==4.0.1
