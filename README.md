@@ -178,3 +178,4 @@ dbt-oxide builds upon the excellent work of the dbt Labs team and the broader db
 - All contributors to the dbt community
 
 **This is an independent fork and is not affiliated with or endorsed by dbt Labs.**
+
