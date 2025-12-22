@@ -7,6 +7,12 @@ pub struct DbtGraph {
     inner: OxideGraph,
 }
 
+impl DbtGraph {
+    pub fn from_oxide_graph(graph: OxideGraph) -> Self {
+        DbtGraph { inner: graph }
+    }
+}
+
 impl Default for DbtGraph {
     fn default() -> Self {
         Self::new()

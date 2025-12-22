@@ -50,6 +50,33 @@ Consult these for the "how" when implementing a phase.
 ## Development Protocols
 
 - **Build Tool:** `maturin` is used for building Python wheels from Rust.
+- **Building the Rust Extension:**
+  ```bash
+  # Recommended: Use uv pip install for reliable builds
+  uv pip install -e .
+  
+  # This command rebuilds and installs the Rust extension into the virtual environment
+  # It is more reliable than `maturin develop` which can have caching issues
+  ```
+  
+  > [!WARNING]
+  > **Avoid `maturin develop`** - It can leave stale `.so` files in site-packages, causing
+  > "module has no attribute" errors. Always use `uv pip install -e .` instead.
+  
+  **Troubleshooting Build Issues:**
+  ```bash
+  # If you encounter "AttributeError: module 'dbt_rs' has no attribute X" errors:
+  # 1. Clean the Rust target directory
+  rm -rf src/dbt_rs/target
+  
+  # 2. Remove stale packages from site-packages
+  rm -rf .venv/lib/python*/site-packages/dbt_rs* .venv/lib/python*/site-packages/dbt_oxide*
+  
+  # 3. Reinstall dependencies and rebuild
+  uv sync --group dev
+  uv pip install -e .
+  ```
+
 - **Rust Code Quality:** **ALWAYS run these after making Rust code changes:**
   - `cargo fmt --all` - Format code (CI enforces this)
   - `cargo clippy --no-default-features -- -D warnings` - Lint code (CI enforces this)
@@ -95,12 +122,13 @@ The Python codebase is a **shell layer** that wraps Rust implementations. All ex
 
 ### Do's and Don'ts
 
-| ✅ Do | ❌ Don't |
+| Do | Don't |
 |-------|----------|
 | Wrap Rust calls in existing Python classes | Expose `dbt_rs.*` types in public APIs |
 | Convert Rust return types to match original signatures | Change method signatures to "simplify" integration |
 | Handle Rust errors and convert to `DbtRuntimeError` | Let Rust panics propagate to callers |
 | Keep wrapper logic minimal (delegate to Rust) | Add business logic in wrapper layers |
+| Place all imports at module level | Import inside functions/methods |
 
 ### Example Pattern
 

@@ -1,5 +1,6 @@
 from collections import defaultdict, deque
 import dataclasses
+import json
 import os
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
@@ -41,9 +42,6 @@ from dbt_common.events.contextvars import get_node_info
 from dbt_common.events.format import pluralize
 from dbt_common.events.functions import fire_event
 from dbt_common.invocation import get_invocation_id
-
-# import networkx as nx  # type: ignore
-import dbt_rs
 
 graph_file_name = "graph.gpickle"
 
@@ -131,9 +129,7 @@ class Linker:
     def __init__(self, data=None) -> None:
         if data is None:
             data = {}
-        # self.graph: nx.DiGraph = nx.DiGraph(**data)
-        self.graph = dbt_rs.DbtGraph()
-        # TODO: Handle data if not empty?
+        self.graph: Graph = Graph.empty()
         if data:
             raise NotImplementedError(
                 "Initializing Linker with data is not supported with dbt-oxide yet."
@@ -191,25 +187,12 @@ class Linker:
                 raise GraphDependencyNotFoundError(node, dependency)
 
     def link_graph(self, manifest: Manifest):
-        for source in manifest.sources.values():
-            self.add_node(source.unique_id)
-        for node in manifest.nodes.values():
-            self.link_node(node, manifest)
-        for semantic_model in manifest.semantic_models.values():
-            self.link_node(semantic_model, manifest)
-        for exposure in manifest.exposures.values():
-            self.link_node(exposure, manifest)
-        for metric in manifest.metrics.values():
-            self.link_node(metric, manifest)
-        for unit_test in manifest.unit_tests.values():
-            self.link_node(unit_test, manifest)
-        for saved_query in manifest.saved_queries.values():
-            self.link_node(saved_query, manifest)
-
+        writable = manifest.writable_manifest()
+        json_str = json.dumps(writable.to_dict(omit_none=False, context={"artifact": True}))
+        self.graph = Graph.from_json(json_str)
         cycle = self.find_cycles()
-
         if cycle:
-            raise RuntimeError("Found a cycle: {}".format(cycle))
+            raise RuntimeError(f"Found a cycle: {cycle}")
 
     def add_test_edges(self, manifest: Manifest) -> None:
         if not get_flags().USE_FAST_TEST_EDGES:
@@ -441,7 +424,7 @@ class Linker:
 
     def get_graph(self, manifest: Manifest) -> Graph:
         self.link_graph(manifest)
-        return Graph(self.graph)
+        return self.graph
 
     def get_graph_summary(self, manifest: Manifest) -> Dict[int, Dict[str, Any]]:
         """Create a smaller summary of the graph, suitable for basic diagnostics
@@ -703,11 +686,7 @@ class Compiler:
             stats = _generate_stats(manifest)
             print_compile_stats(stats)
 
-        # We need to return a dbt.graph.Graph, but that expects a networkx graph.
-        # So we might need to adapt dbt.graph.Graph too.
-        # For now, let's pass the dbt_rs graph if possible or Mock it.
-        # Graph class in dbt.graph wraps nx.DiGraph.
-        return Graph(linker.graph)
+        return linker.graph
 
     def write_graph_file(self, linker: Linker, manifest: Manifest):
         filename = graph_file_name

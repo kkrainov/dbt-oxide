@@ -72,7 +72,7 @@ class TestLinker:
         include=None,
         exclude=None,
     ) -> GraphQueue:
-        graph = Graph(linker.graph)
+        graph = linker.graph
         selector = NodeSelector(graph, manifest)
         # TODO:  The "eager" string below needs to be replaced with programatic access
         #  to the default value for the indirect selection parameter in

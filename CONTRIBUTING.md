@@ -50,8 +50,8 @@ pip install uv
 # Install all dependencies (dbt-core, pytest, dbt-postgres, etc.)
 uv sync --group dev
 
-# Build the Rust extension
-uv run maturin develop --release
+# Build and install the Rust extension
+uv pip install -e .
 ```
 
 ### Verify Setup
@@ -115,7 +115,7 @@ uv run ruff format core/dbt
 uv run mypy core/dbt
 
 # Rebuild Rust extension if you changed Rust code
-uv run maturin develop --release
+uv pip install -e .
 
 # Run Python tests
 uv run pytest tests/unit -v

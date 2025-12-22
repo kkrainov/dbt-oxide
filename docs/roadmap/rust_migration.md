@@ -252,6 +252,31 @@ impl OxideManifest {
 3. **Faster initialization:** Graph construction in Rust is ~10x faster
 4. **Foundation for Phase 3:** Compiler can query graph + node data without Python
 
+### Future Optimization: PyO3 Direct Object Binding
+
+**Status:** Planned (post-Phase 2.5)
+
+Currently, graph building uses JSON serialization to pass manifest data to Rust. A future optimization would eliminate serialization entirely:
+
+```rust
+// Future: Accept Python dict directly via PyO3
+#[pyfunction]
+fn build_graph_from_manifest_dict(manifest: &PyDict) -> PyResult<DbtGraph> {
+    // Access Python dict fields directly without JSON serialization
+    let nodes = manifest.get_item("nodes")?;
+    // ... build graph directly from Python objects
+}
+```
+
+**Benefits:**
+- Eliminates JSON serialization/deserialization overhead
+- ~2-5x faster graph construction for large manifests
+- Enables incremental updates (add single node without full rebuild)
+
+**Trade-offs:**
+- More complex PyO3 code
+- Tighter coupling between Python and Rust data structures
+
 ---
 
 ## Phase 3: The Compiler Engine 🔲

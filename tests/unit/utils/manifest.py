@@ -329,6 +329,7 @@ def make_unit_test(
     test_name,
     test_model,
 ):
+    model_name = test_model.name if hasattr(test_model, 'name') else test_model
     input_fixture = UnitTestInputFixture(
         input="ref('table_model')",
         rows=[{"id": 1, "string_a": "a"}],
@@ -338,15 +339,15 @@ def make_unit_test(
     )
     return UnitTestDefinition(
         name=test_name,
-        model=test_model,
+        model=model_name,
         package_name=pkg,
         resource_type=NodeType.Unit,
         path="unit_tests.yml",
         original_file_path="models/unit_tests.yml",
-        unique_id=f"unit.{pkg}.{test_model.name}__{test_name}",
+        unique_id=f"unit.{pkg}.{model_name}__{test_name}",
         given=[input_fixture],
         expect=output_fixture,
-        fqn=[pkg, test_model.name, test_name],
+        fqn=[pkg, model_name, test_name],
     )
 
 
@@ -469,14 +470,18 @@ def make_semantic_model(
     if path is None:
         path = "schema.yml"
 
+    model_name = model.name if hasattr(model, 'name') else model
+    model_alias = model.alias if hasattr(model, 'alias') else model_name
+    model_ref = f"ref('{model_name}')"
+
     return SemanticModel(
         name=name,
         resource_type=NodeType.SemanticModel,
-        model=model,
+        model=model_ref,
         node_relation=NodeRelation(
-            alias=model.alias,
+            alias=model_alias,
             schema_name="dbt",
-            relation_name=model.name,
+            relation_name=model_name,
         ),
         package_name=pkg,
         path=path,
