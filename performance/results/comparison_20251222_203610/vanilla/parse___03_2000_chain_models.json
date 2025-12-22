@@ -1,0 +1,22 @@
+{
+  "results": [
+    {
+      "command": "dbt parse --no-version-check --profiles-dir ../../project_config/",
+      "mean": 9.07804799458,
+      "stddev": 0.09467099139916173,
+      "median": 9.07804799458,
+      "user": 8.183279019999999,
+      "system": 0.37981904,
+      "min": 9.011105494579999,
+      "max": 9.14499049458,
+      "times": [
+        9.011105494579999,
+        9.14499049458
+      ],
+      "exit_codes": [
+        0,
+        0
+      ]
+    }
+  ]
+}

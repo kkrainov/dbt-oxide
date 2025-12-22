@@ -11,11 +11,23 @@ use std::{cmp, fs};
 
 // TODO these should not be defined here anymore. they need to be split at the github action level.
 // To add a new metric to the test suite, simply define it in this list
-static METRICS: [HyperfineCmd; 1] = [HyperfineCmd {
-    name: "parse",
-    prepare: "dbt clean",
-    cmd: "dbt parse --no-version-check",
-}];
+static METRICS: [HyperfineCmd; 3] = [
+    HyperfineCmd {
+        name: "parse",
+        prepare: "uv run dbt clean",
+        cmd: "uv run dbt parse --no-version-check",
+    },
+    HyperfineCmd {
+        name: "ls",
+        prepare: "uv run dbt parse --no-version-check",
+        cmd: "uv run dbt ls --no-version-check",
+    },
+    HyperfineCmd {
+        name: "ls_select_ancestors",
+        prepare: "uv run dbt parse --no-version-check",
+        cmd: "uv run dbt ls --no-version-check --select +marts_0",
+    },
+];
 
 pub fn from_json_files<T: DeserializeOwned>(
     dir: &dyn AsRef<Path>,

@@ -1,0 +1,8 @@
+version: 2
+
+models:
+  - name: base_210
+    columns:
+      - name: id
+        tests:
+          - not_null

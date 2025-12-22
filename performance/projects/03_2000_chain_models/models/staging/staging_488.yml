@@ -1,0 +1,8 @@
+version: 2
+
+models:
+  - name: staging_488
+    columns:
+      - name: id
+        tests:
+          - not_null
