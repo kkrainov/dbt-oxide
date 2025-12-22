@@ -1,0 +1,1 @@
+select 66 as id, 'chain_66' as chain_name

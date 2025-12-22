@@ -1,0 +1,8 @@
+version: 2
+
+models:
+  - name: marts_214
+    columns:
+      - name: id
+        tests:
+          - not_null

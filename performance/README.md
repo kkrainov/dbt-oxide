@@ -11,6 +11,71 @@ This test suite samples the performance characteristics of individual commits ag
 
 This collection of projects and commands should expand over time to reflect user feedback about poorly performing projects to protect against poor performance in these scenarios in future versions.
 
+## Test Projects
+
+The performance test suite includes multiple projects to test different scenarios:
+
+### 01_2000_simple_models
+- **Models:** 2000 independent models
+- **Structure:** Simple `select 1 as id` statements
+- **Graph:** Minimal edges (test relationships only)
+- **Purpose:** Baseline parsing and manifest performance
+
+### 02_500_chain_models
+- **Models:** 500 models with ref() dependencies
+- **Structure:** 4-layer dependency chains (base → staging → intermediate → marts)
+- **Graph:** 125 chains × 4 layers with full ref() graph
+- **Purpose:** Test graph traversal and ancestor/descendant selection
+
+### 03_2000_chain_models
+- **Models:** 2000 models with ref() dependencies
+- **Structure:** 4-layer dependency chains (base → staging → intermediate → marts)
+- **Graph:** 500 chains × 4 layers with full ref() graph
+- **Purpose:** Large-scale graph operations testing
+
+## Performance Metrics
+
+Current metrics tested for each project:
+
+1. **parse** - Full manifest parsing and graph construction from scratch
+2. **ls** - List all models (tests graph iteration)
+3. **ls_select_ancestors** - Select ancestors of a model (tests graph traversal)
+
+## Vanilla dbt-core Comparison
+
+To compare performance against vanilla dbt-core:
+
+```bash
+./performance/scripts/run_comparison.sh [version]
+```
+
+This script:
+1. Creates a temporary venv
+2. Installs specified vanilla dbt-core version via uv
+3. Runs benchmarks with vanilla dbt
+4. Runs benchmarks with dbt-oxide
+5. Generates comparison report
+6. Cleans up
+
+Example:
+```bash
+./performance/scripts/run_comparison.sh 1.10.16
+```
+
+Report is generated at `performance/results/comparison_TIMESTAMP/comparison_report.md`
+
+## Generating Test Projects
+
+To create new chain projects with configurable dependencies:
+
+```bash
+python performance/scripts/generate_chain_project.py \
+    --output performance/projects/my_test_project \
+    --num-chains 125 \
+    --chain-depth 4 \
+    --project-name "my_test"
+```
+
 Here are all the components of the testing module:
 
 - dbt project setups that are known performance bottlenecks which you can find in `/performance/projects/`, and a runner written in Rust that runs specific dbt commands on each of the projects.

@@ -47,6 +47,7 @@ Consult these for the "how" when implementing a phase.
 - **Minimalism:** Only add comments if the code logic is not self-explanatory.
 - **Current State Only:** Comments must describe the *current* implementation. Do not reference deprecated approaches, previous versions, or "old" logic.
 - **No Cross-References:** Avoid comments like "See function X for details".
+- **No Emojis:** Never use emojis in code, comments, output messages, or documentation. Use plain text symbols instead (e.g., `[OK]`, `+`, `-`, `=`).
 ## Development Protocols
 
 - **Build Tool:** `maturin` is used for building Python wheels from Rust.

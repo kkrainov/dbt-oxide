@@ -1,0 +1,1 @@
+select 386 as id, 'chain_386' as chain_name

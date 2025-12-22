@@ -1,0 +1,1 @@
+select 64 as id, 'chain_64' as chain_name

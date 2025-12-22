@@ -1,0 +1,8 @@
+version: 2
+
+models:
+  - name: intermediate_459
+    columns:
+      - name: id
+        tests:
+          - not_null

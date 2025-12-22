@@ -1,0 +1,1 @@
+select 365 as id, 'chain_365' as chain_name
