@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/dbt-labs/dbt-core/fa1ea14ddfb1d5ae319d5141844910dd53ab2834/etc/dbt-oxide.png" alt="dbt oxide logo" width="750"/>
+  <img src="https://github.com/kkrainov/dbt-oxide/blob/c3c082c705cde65176c401ba2afc42947f929a3d/etc/dbt-oxide.png" alt="dbt oxide logo" width="750"/>
 </p>
 
 # dbt-oxide

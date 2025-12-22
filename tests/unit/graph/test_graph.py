@@ -46,11 +46,9 @@ class TestGraph:
 
     @pytest.fixture
     def graph(self, manifest: Manifest, local_manifest_extensions) -> Graph:
-        # We include the `local_manifest_extensions` in the arguments to ensure
-        # that fixture adds our extra node sbefore creating the graph
         linker = Linker()
         linker.link_graph(manifest=manifest)
-        return Graph(graph=linker.graph)
+        return linker.graph
 
     def test_nodes(self, graph: Graph, manifest: Manifest):
         graph_nodes = graph.nodes()

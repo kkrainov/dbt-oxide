@@ -537,11 +537,12 @@ class ManifestLoader:
 
             start = time.perf_counter()
 
-            # Use mashumaro's to_dict for efficient serialization
+            # Use mashumaro's to_dict with artifact context for proper nested object serialization
+            # (same approach as Writable.write method)
             writable = self.manifest.writable_manifest()
             import json
 
-            json_str = json.dumps(writable.to_dict())
+            json_str = json.dumps(writable.to_dict(omit_none=False, context={"artifact": True}))
 
             # Load into Rust
             dbt_rs.load_manifest(json_str)

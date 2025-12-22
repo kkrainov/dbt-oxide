@@ -37,6 +37,21 @@ class Graph:
             )
         self.graph = graph
 
+    @classmethod
+    def empty(cls) -> "Graph":
+        """Create an empty graph."""
+        return cls(dbt_rs.DbtGraph())
+
+    @classmethod
+    def from_json(cls, json_str: str) -> "Graph":
+        """Build graph from JSON manifest string."""
+        rust_graph = dbt_rs.build_graph_from_manifest_json(json_str)
+        return cls(rust_graph)
+
+    def find_cycle(self):
+        """Detect cycle in graph. Returns cycle path or None."""
+        return self.graph.find_cycle()
+
     def nodes(self) -> Set[UniqueId]:
         return set(self.graph.nodes())
 
