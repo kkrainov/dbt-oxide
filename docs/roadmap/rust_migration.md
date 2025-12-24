@@ -24,16 +24,18 @@ This roadmap provides an overview of the migration project. For detailed executi
 
 | Phase | Status | Performance Target | Risk |
 |-------|--------|-------------------|------|
-| **Phase 0: Foundation** | ✅ Complete | - | Low |
-| **Phase 1: Graph Engine** | ✅ Complete | 100x faster toposort | Low |
-| **Phase 2: Zero-Copy Manifest** | ✅ Complete (Infra) | Rust manifest storage | Medium |
-| **Phase 2.5: Unified Data Layer** | 🔜 Next | Direct graph-from-manifest | Low |
-| **Phase 3: Compiler Engine** | 🔲 Planned | 20x faster template rendering | High |
-| **Phase 4: Parallelization** | 🔲 Planned | Linear scaling with CPU cores | Medium |
+| **Phase 0: Foundation** |  Complete | - | Low |
+| **Phase 1: Graph Engine** |  Complete | 100x faster toposort | Low |
+| **Phase 2: Zero-Copy Manifest** |  Complete | Rust manifest storage | Medium |
+| **Phase 2.5: Unified Data Layer** |  Complete | Direct graph-from-manifest | Low |
+| **Phase 3.1: minijinja-py** |  Next | 3-5x faster Jinja | Low |
+| **Phase 3.2: Rust Node Construction** |  Planned | Eliminate 5s validation | Medium |
+| **Phase 3.3: Rust Manifest Ops** |  Planned | Fast lookups | Low |
+| **Phase 4: Parallelization** |  Planned | Linear scaling with CPU cores | Medium |
 
 ---
 
-## Phase 0: Foundation & Infrastructure ✅
+## Phase 0: Foundation & Infrastructure 
 
 **Status:** Complete
 
@@ -48,7 +50,7 @@ Established the hybrid build environment enabling Python/Rust interoperability.
 
 ---
 
-## Phase 1: The Graph Engine ✅
+## Phase 1: The Graph Engine 
 
 **Status:** Complete
 **Objective:** Replace NetworkX with high-performance Rust graph using `petgraph`.
@@ -111,7 +113,7 @@ pub fn get_subset_graph(&self, nodes: &HashSet<String>) -> OxideGraph
 
 ---
 
-## Phase 2: Zero-Copy Manifest ✅
+## Phase 2: Zero-Copy Manifest 
 
 **Status:** Complete (Infrastructure)
 **Objective:** Share complete Manifest state between Python and Rust without repeated serialization.
@@ -185,201 +187,244 @@ The Rust manifest is currently **stored but not queried**. Rather than adding te
 
 ---
 
-## Phase 2.5: Unified Data Layer (NEW) 🔲
+## Phase 2.5: Unified Data Layer 
+
+**Status:** Complete
+**Objective:** Integrate Manifest and Graph in Rust to build the graph directly from manifest dependencies.
+**Result:** `build_graph_from_global_manifest()` implemented in Rust, used by `Linker`.
+
+> [!NOTE]
+> Graph construction now uses the global OxideManifest directly in Rust via `Graph.from_global_manifest()`. The `link_graph()` method in `Linker` leverages this for faster graph building.
+
+### Completed Items
+
+- [x] `OxideManifest::build_graph()` method in Rust
+- [x] `build_graph_from_global_manifest()` PyO3 function
+- [x] `Graph.from_global_manifest()` Python class method
+- [x] `Linker.link_graph()` uses global manifest when available
+- [x] Rust tests for graph-from-manifest
+- [x] Python integration tests pass
+
+### Implementation Summary
+
+| Component | File | Description |
+|-----------|------|-------------|
+| Rust Graph Builder | `src/dbt_rs/src/manifest.rs` | `build_graph()` method |
+| PyO3 Function | `src/dbt_rs/src/py_data_layer.rs` | `build_graph_from_global_manifest()` |
+| Python Integration | `core/dbt/graph/graph.py` | `Graph.from_global_manifest()` |
+| Linker Usage | `core/dbt/compilation.py` | `link_graph()` method |
+
+---
+
+## Phase 3: Hybrid Parsing Engine 
+
+**Architecture:** Python + minijinja-py for Jinja, Rust for node construction and operations.
+
+> [!NOTE]
+> Based on profiling (2000 models, 16s total), the hybrid approach delivers maximum performance with minimal risk.
+
+### Profiling Evidence
+
+| Component | Current Time | Target | Strategy |
+|-----------|--------------|--------|----------|
+| Jinja rendering | 11.1s (69%) | 3-4s | minijinja-py |
+| Node construction + validation | 5.3s (33%) | <0.5s | Rust structs |
+| Manifest sync | 675ms | 0ms | Direct Rust storage |
+
+---
+
+## Phase 3.1: minijinja-py Integration 
+
+**Status:** Next
+**Objective:** Replace Jinja2 with minijinja-py (Rust-powered Python bindings).
+**Performance Target:** 3-5x faster template rendering.
+**Risk:** Low
+
+> [!TIP]
+> minijinja-py is the official Python binding for minijinja. It's a drop-in replacement that runs Jinja templates in Rust while keeping Python functions callable.
+
+### Implementation
+
+```python
+# core/dbt/clients/jinja.py
+from minijinja import Environment as MiniJinjaEnv
+
+def create_dbt_jinja_env(manifest, config):
+    env = MiniJinjaEnv()
+    
+    # Register context functions (these are Python, called from Rust)
+    env.add_function("ref", create_ref_function(manifest))
+    env.add_function("source", create_source_function(manifest))
+    env.add_function("config", create_config_function())
+    env.add_function("var", create_var_function(config))
+    env.add_function("env_var", os.environ.get)
+    
+    # Adapter calls work automatically - they're Python functions
+    env.add_function("adapter", lambda: adapter)
+    
+    return env
+```
+
+### Checklist
+
+- [ ] Add `minijinja` to `pyproject.toml`
+- [ ] Create `DbtMiniJinjaEnvironment` wrapper class
+- [ ] Register core context functions (ref, source, config, var)
+- [ ] Register adapter and other Python objects
+- [ ] Replace `get_rendered()` to use minijinja
+- [ ] Register project macros as templates
+- [ ] Unit tests comparing output with Jinja2
+- [ ] Performance benchmark
+
+### Why This Works
+
+minijinja-py handles Python function calls automatically:
+- Known functions (ref, source, config) → registered Python callbacks
+- Unknown functions → error (fail-fast, no silent issues)
+- Adapter methods → Python object passed, all methods callable
+
+---
+
+## Phase 3.2: Rust Node Construction 
 
 **Status:** Planned
-**Objective:** Integrate Manifest and Graph in Rust to build the graph directly from manifest dependencies.
-**Performance Target:** Eliminate Python graph construction overhead.
-**Risk:** Low (builds on existing infrastructure)
+**Objective:** Build OxideNode directly in Rust, eliminating Python dataclass + jsonschema overhead.
+**Performance Target:** Eliminate 5.3s node construction time.
+**Risk:** Medium
 
-> [!IMPORTANT]
-> This phase connects the two existing Rust modules (Graph + Manifest) to create a unified data layer where the graph is built directly from manifest dependency data.
+### Profiling Evidence
 
-### Step 2.5.1: Graph-from-Manifest Builder
+| Function | Time | Issue |
+|----------|------|-------|
+| `finalize_and_validate` | 3.4s | jsonschema validation |
+| `_create_parsetime_node` | 2.3s | Python dataclass creation |
+| `validate` (jsonschema) | 5.4s | Called 8001 times |
 
-- [ ] Add method `OxideManifest::build_graph(&self) -> OxideGraph`
-- [ ] Iterate over `manifest.nodes` and extract `depends_on.nodes`
-- [ ] Create edges for each dependency relationship
-- [ ] Handle edge types (data vs. test dependencies)
+### Implementation
 
-**Implementation Plan:**
-
-```rust
-// In src/dbt_rs/src/manifest.rs
-impl OxideManifest {
-    pub fn build_graph(&self) -> OxideGraph {
-        let mut graph = OxideGraph::new();
-        
-        // Add all nodes first
-        for unique_id in self.nodes.keys() {
-            graph.add_node(unique_id.clone());
-        }
-        
-        // Add edges from depends_on
-        for (unique_id, node) in &self.nodes {
-            for dep_id in &node.depends_on.nodes {
-                graph.add_edge(dep_id, unique_id, None).ok();
-            }
-        }
-        
-        graph
-    }
-}
-```
-
-### Step 2.5.2: Python Integration
-
-- [ ] Add `dbt_rs.build_graph_from_manifest() -> DbtGraph` PyO3 function
-- [ ] Modify `Linker` to optionally use Rust-built graph
-- [ ] Add feature flag `DBT_OXIDE_UNIFIED_GRAPH=1`
-
-### Step 2.5.3: Tests
-
-- [ ] Rust test: `test_build_graph_from_manifest`
-- [ ] Rust test: `test_graph_dependencies_match_manifest`
-- [ ] Python integration test: Compare Rust-built graph with Python-built graph
-
-### Step 2.5.4: Migration
-
-- [ ] Verify graph parity between Python and Rust construction
-- [ ] Replace Python graph construction with Rust
-- [ ] Remove Python graph building code
-
-### Expected Benefits
-
-1. **Single source of truth:** Graph and manifest are always in sync
-2. **Reduced memory:** No duplicate data structures in Python
-3. **Faster initialization:** Graph construction in Rust is ~10x faster
-4. **Foundation for Phase 3:** Compiler can query graph + node data without Python
-
-### Future Optimization: PyO3 Direct Object Binding
-
-**Status:** Planned (post-Phase 2.5)
-
-Currently, graph building uses JSON serialization to pass manifest data to Rust. A future optimization would eliminate serialization entirely:
-
-```rust
-// Future: Accept Python dict directly via PyO3
-#[pyfunction]
-fn build_graph_from_manifest_dict(manifest: &PyDict) -> PyResult<DbtGraph> {
-    // Access Python dict fields directly without JSON serialization
-    let nodes = manifest.get_item("nodes")?;
-    // ... build graph directly from Python objects
-}
-```
-
-**Benefits:**
-- Eliminates JSON serialization/deserialization overhead
-- ~2-5x faster graph construction for large manifests
-- Enables incremental updates (add single node without full rebuild)
-
-**Trade-offs:**
-- More complex PyO3 code
-- Tighter coupling between Python and Rust data structures
-
----
-
-## Phase 3: The Compiler Engine 🔲
-
-**Status:** Planned (Weeks 11-16)
-**Objective:** Rewrite the Jinja rendering pipeline using `minijinja`.
-**Performance Target:** 20x faster template rendering.
-**Risk:** High (Jinja compatibility)
-
-> [!CAUTION]
-> This is the "Holy Grail" of performance but carries the highest risk due to Jinja2 compatibility requirements. Many dbt projects use advanced Jinja features.
-
-### Step 3.1: The Minijinja Environment
-
-- [ ] Add `minijinja` to Cargo.toml
-- [ ] Create `struct Compiler` in Rust
-- [ ] Implement the `ref` context function in Rust:
-
-```rust
-fn ref(target_name: &str) -> String {
-    // Look up target in OxideManifest
-    // Return the relation_name (database.schema.alias)
-}
-```
-
-- [ ] Implement `source` context function (similar to `ref`)
-- [ ] Implement `config` context function
-- [ ] Implement `var` context function
-
-### Step 3.2: Template Loading
-
-- [ ] Pass raw SQL content from Python to Rust
-- [ ] Register all Macros as minijinja templates
-- [ ] Parse `macros/*.sql` using regex or dbt-extractor to split into blocks
-- [ ] Add macros to `minijinja::Environment`
-
-**Implementation Notes:**
-
-```rust
-use minijinja::{Environment, context};
-
-pub struct Compiler {
-    env: Environment<'static>,
-    manifest: Arc<OxideManifest>,
-}
-
-impl Compiler {
-    pub fn new(manifest: Arc<OxideManifest>) -> Self {
-        let mut env = Environment::new();
-        
-        // Register ref function
-        env.add_function("ref", |name: String| -> String {
-            // lookup in manifest.nodes
-        });
-        
-        Self { env, manifest }
-    }
+```python
+# Instead of Python dataclass + validation
+def _create_parsetime_node(self, block, path, config, fqn, ...):
+    dct = { ... }  # Build dict as before
     
-    pub fn compile(&self, raw_sql: &str) -> Result<String, Error> {
-        let template = self.env.template_from_str(raw_sql)?;
-        template.render(context!{})
-    }
-}
+    # Call Rust to construct node directly in OxideManifest
+    node_id = dbt_rs.create_node(
+        name=dct["name"],
+        raw_code=dct["raw_code"],
+        path=dct["path"],
+        package_name=dct["package_name"],
+        resource_type=dct["resource_type"],
+        config=dct["config"],
+        fqn=dct["fqn"],
+        depends_on=depends_on,
+    )
+    
+    # Return lightweight Python wrapper
+    return RustNodeWrapper(node_id)
 ```
-
-### Step 3.3: The "Python Trapdoor" (Callback System)
-
-- [ ] Detect macros using Python-specific logic (e.g., `modules.datetime`, `run_query`)
-- [ ] Implement Rust callback for unknown functions:
 
 ```rust
-fn python_trapdoor(macro_name: &str, args: Vec<Value>) -> String {
-    Python::with_gil(|py| {
-        let jinja_module = py.import("dbt.clients.jinja")?;
-        let result = jinja_module.call_method1(
-            "render_macro_in_python",
-            (macro_name, args)
-        )?;
-        result.extract::<String>()
-    })
+// src/dbt_rs/src/node_builder.rs
+#[pyfunction]
+pub fn create_node(
+    name: &str,
+    raw_code: &str,
+    path: &str,
+    package_name: &str,
+    resource_type: &str,
+    config: HashMap<String, Value>,
+    fqn: Vec<String>,
+    depends_on: Vec<String>,
+) -> PyResult<String> {
+    let node = OxideNode {
+        unique_id: format!("{}.{}.{}", resource_type, package_name, name),
+        name: name.to_string(),
+        // ... other fields
+    };
+    
+    // Store directly in global manifest
+    let manifest = get_global_manifest()?;
+    let mut guard = manifest.write().unwrap();
+    guard.nodes.insert(node.unique_id.clone(), node);
+    
+    Ok(node.unique_id)
 }
 ```
 
-- [ ] Return string result to minijinja
-- [ ] Log/track trapdoor usage for optimization
+### Checklist
 
-### Step 3.4: Release v0.2
-
-- [ ] Create opt-in flag: `DBT_OXIDE_COMPILER=1`
-- [ ] Document known limitations
-- [ ] Run compatibility tests against dbt-core test suite
-- [ ] Performance benchmark against Python Jinja2
-
-### Verification Checklist
-
-- [ ] All models compile with identical SQL output
-- [ ] Macros with refs/sources work correctly
-- [ ] Custom macros work via Python trapdoor
-- [ ] No regressions in existing tests
+- [ ] Add `create_node()` PyO3 function
+- [ ] Create `RustNodeWrapper` Python class for backward compatibility
+- [ ] Implement all node types (ModelNode, TestNode, SeedNode, etc.)
+- [ ] Update parsers to use Rust node construction
+- [ ] Add Rust tests (TDD)
+- [ ] Verify all Python tests pass with wrappers
 
 ---
 
-## Phase 4: Parallelization & Introspection 🔲
+## Phase 3.3: Rust Manifest Operations 
+
+**Status:** Planned
+**Objective:** Move lookup operations from Python to Rust.
+**Performance Target:** O(1) HashMap lookups, eliminate parent/child map rebuilding.
+**Risk:** Low
+
+### Operations to Migrate
+
+| Operation | Current | Target |
+|-----------|---------|--------|
+| `resolve_ref()` | Python iteration | Rust HashMap |
+| `resolve_source()` | Python iteration | Rust HashMap |
+| `build_parent_and_child_maps()` | Python (called 3x) | Rust (build once) |
+| `get_node()` | Python dict | Rust HashMap |
+
+### Implementation
+
+```rust
+// src/dbt_rs/src/manifest_ops.rs
+#[pyfunction]
+pub fn resolve_ref(
+    name: &str,
+    package: Option<&str>,
+    version: Option<&str>,
+    current_project: &str,
+) -> PyResult<Option<String>> {
+    let manifest = get_global_manifest()?;
+    let guard = manifest.read().unwrap();
+    Ok(guard.find_node_by_name(name, package, version))
+}
+
+#[pyfunction]
+pub fn get_parent_map() -> PyResult<HashMap<String, Vec<String>>> {
+    let manifest = get_global_manifest()?;
+    let guard = manifest.read().unwrap();
+    Ok(guard.build_parent_map())
+}
+```
+
+### Checklist
+
+- [ ] Add `resolve_ref()` PyO3 function
+- [ ] Add `resolve_source()` PyO3 function
+- [ ] Add `get_parent_map()` / `get_child_map()` functions
+- [ ] Update `Manifest` Python class to use Rust lookups
+- [ ] Cache parent/child maps in Rust
+- [ ] Add Rust tests (TDD)
+
+---
+
+### Expected Performance After Phase 3
+
+| Component | Before | After Phase 3 |
+|-----------|--------|---------------|
+| Jinja rendering | 11.1s | **3-4s** |
+| Node construction | 5.3s | **<0.5s** |
+| Manifest sync | 675ms | **0ms** |
+| **Total parse (2000 models)** | **~16s** | **~4s** |
+
+---
+
+## Phase 4: Parallelization & Introspection 
 
 **Status:** Planned (Weeks 17+)
 **Objective:** Multithreaded compilation and intelligent database introspection handling.
@@ -522,20 +567,20 @@ src/dbt_rs/
 ├── Cargo.toml           # Rust dependencies
 ├── src/
 │   ├── lib.rs           # PyO3 module registration
-│   ├── graph.rs         # OxideGraph (Phase 1) ✅
-│   ├── py_graph.rs      # DbtGraph PyO3 wrapper ✅
-│   ├── manifest.rs      # OxideManifest (Phase 2) ✅
-│   ├── py_manifest.rs   # Manifest PyO3 bindings ✅
-│   ├── compiler.rs      # Compiler (Phase 3) 🔲
-│   └── py_compiler.rs   # Compiler PyO3 bindings 🔲
+│   ├── graph.rs         # OxideGraph (Phase 1) 
+│   ├── py_graph.rs      # DbtGraph PyO3 wrapper 
+│   ├── manifest.rs      # OxideManifest (Phase 2) 
+│   ├── py_manifest.rs   # Manifest PyO3 bindings 
+│   ├── compiler.rs      # Compiler (Phase 3) 
+│   └── py_compiler.rs   # Compiler PyO3 bindings 
 
 core/dbt/
 ├── graph/
-│   ├── graph.py         # Graph wrapper (uses DbtGraph) ✅
-│   └── queue.py         # Uses Rust toposort ✅
-├── compilation.py       # Linker (uses DbtGraph) ✅
+│   ├── graph.py         # Graph wrapper (uses DbtGraph) 
+│   └── queue.py         # Uses Rust toposort 
+├── compilation.py       # Linker (uses DbtGraph) 
 └── parser/
-    └── manifest.py      # _sync_manifest_to_rust() ✅
+    └── manifest.py      # _sync_manifest_to_rust() 
 ```
 
 ---

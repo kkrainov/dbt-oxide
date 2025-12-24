@@ -48,6 +48,12 @@ class Graph:
         rust_graph = dbt_rs.build_graph_from_manifest_json(json_str)
         return cls(rust_graph)
 
+    @classmethod
+    def from_global_manifest(cls) -> "Graph":
+        """Build graph from the globally loaded Rust manifest."""
+        rust_graph = dbt_rs.build_graph_from_global_manifest()
+        return cls(rust_graph)
+
     def find_cycle(self):
         """Detect cycle in graph. Returns cycle path or None."""
         return self.graph.find_cycle()
