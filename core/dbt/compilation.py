@@ -187,9 +187,12 @@ class Linker:
                 raise GraphDependencyNotFoundError(node, dependency)
 
     def link_graph(self, manifest: Manifest):
-        writable = manifest.writable_manifest()
-        json_str = json.dumps(writable.to_dict(omit_none=False, context={"artifact": True}))
-        self.graph = Graph.from_json(json_str)
+        try:
+            self.graph = Graph.from_global_manifest()
+        except RuntimeError:
+            writable = manifest.writable_manifest()
+            json_str = json.dumps(writable.to_dict(omit_none=False, context={"artifact": True}))
+            self.graph = Graph.from_json(json_str)
         cycle = self.find_cycles()
         if cycle:
             raise RuntimeError(f"Found a cycle: {cycle}")

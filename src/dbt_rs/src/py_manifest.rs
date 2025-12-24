@@ -6,6 +6,15 @@ use std::sync::RwLock;
 
 static MANIFEST: OnceCell<RwLock<OxideManifest>> = OnceCell::new();
 
+/// Get reference to the global manifest (for internal use by other modules).
+pub fn get_global_manifest() -> PyResult<&'static RwLock<OxideManifest>> {
+    MANIFEST.get().ok_or_else(|| {
+        pyo3::exceptions::PyRuntimeError::new_err(
+            "Manifest not loaded. Call load_manifest() first.",
+        )
+    })
+}
+
 #[pyfunction]
 pub fn load_manifest(json_string: &str) -> PyResult<()> {
     let manifest = OxideManifest::from_json_str(json_string)
