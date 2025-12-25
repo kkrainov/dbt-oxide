@@ -10,6 +10,8 @@ import jinja2.nodes
 import jinja2.parser
 import jinja2.sandbox
 
+# Phase 3.1: minijinja integration for fast template rendering
+from dbt.clients import oxide_jinja
 from dbt.contracts.graph.nodes import GenericTestNode
 from dbt.exceptions import (
     DbtInternalError,
@@ -133,20 +135,25 @@ def get_rendered(
         elif string in _render_cache:
             return _render_cache[string]
 
-    template = get_template(
-        string,
-        ctx,
-        node,
-        capture_macros=capture_macros,
-        native=native,
-    )
-
-    rendered = render_template(template, ctx, node)
+    # Hybrid rendering: minijinja for fast path, Jinja2 for macro tracking
+    if not capture_macros:
+        # Fast path: minijinja rendering
+        result = oxide_jinja.render(string, ctx, native=native)
+    else:
+        # Jinja2 path for macro tracking (capture_macros=True)
+        template = get_template(
+            string,
+            ctx,
+            node,
+            capture_macros=capture_macros,
+            native=native,
+        )
+        result = render_template(template, ctx, node)
 
     if not has_render_chars and native:
-        _render_cache[string] = rendered
+        _render_cache[string] = result
 
-    return rendered
+    return result
 
 
 def undefined_error(msg) -> NoReturn:

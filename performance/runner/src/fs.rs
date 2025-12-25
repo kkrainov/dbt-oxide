@@ -9,8 +9,7 @@ use std::process::{Command, ExitStatus};
 use std::str::FromStr;
 use std::{cmp, fs};
 
-// TODO these should not be defined here anymore. they need to be split at the github action level.
-// To add a new metric to the test suite, simply define it in this list
+// Metrics for performance benchmarks.
 static METRICS: [HyperfineCmd; 3] = [
     HyperfineCmd {
         name: "parse",
