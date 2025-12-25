@@ -64,6 +64,31 @@ Example:
 
 Report is generated at `performance/results/comparison_TIMESTAMP/comparison_report.md`
 
+## Compile Benchmark (Requires PostgreSQL)
+
+To benchmark `dbt compile` (measures minijinja template rendering performance):
+
+```bash
+./performance/scripts/run_compile_benchmark.sh [version] [project] [runs]
+```
+
+**Requirements:** PostgreSQL must be running with these credentials:
+- Host: localhost, Port: 5432
+- User: root, Password: password, Database: dbt
+
+**Quick PostgreSQL setup with Docker:**
+```bash
+docker run -d --name perf-postgres \
+  -e POSTGRES_USER=root \
+  -e POSTGRES_PASSWORD=password \
+  -e POSTGRES_DB=dbt \
+  -p 5432:5432 \
+  postgres:15
+```
+
+This benchmark measures the `dbt compile` command which uses minijinja (Phase 3.1)
+for template rendering when `capture_macros=False`.
+
 ## Generating Test Projects
 
 To create new chain projects with configurable dependencies:
