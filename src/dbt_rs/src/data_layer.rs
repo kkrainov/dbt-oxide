@@ -30,7 +30,7 @@ pub fn build_graph_from_manifest(manifest: &OxideManifest) -> OxideGraph {
 
     // Add edges from depends_on relationships
     for (unique_id, node) in &manifest.nodes {
-        for dep_id in &node.depends_on.nodes {
+        for dep_id in &node.depends_on().nodes {
             let _ = graph.add_edge(dep_id, unique_id, None);
         }
     }
@@ -78,9 +78,19 @@ mod tests {
     fn test_build_graph_with_single_dependency() {
         let json = r#"{
             "nodes": {
-                "model.test.a": {"unique_id":"model.test.a","name":"a","resource_type":"model","package_name":"test"},
-                "model.test.b": {"unique_id":"model.test.b","name":"b","resource_type":"model","package_name":"test",
-                                 "depends_on":{"nodes":["model.test.a"]}}
+                "model.test.a": {
+                    "unique_id":"model.test.a","name":"a","resource_type":"model","package_name":"test",
+                    "path":"a.sql","original_file_path":"models/a.sql","schema":"test","alias":"a",
+                    "fqn":["test", "a"],
+                    "checksum":{"name":"sha256","checksum":"abc"}
+                },
+                "model.test.b": {
+                    "unique_id":"model.test.b","name":"b","resource_type":"model","package_name":"test",
+                    "path":"b.sql","original_file_path":"models/b.sql","schema":"test","alias":"b",
+                    "fqn":["test", "b"],
+                    "checksum":{"name":"sha256","checksum":"abc"},
+                    "depends_on":{"nodes":["model.test.a"]}
+                }
             },
             "sources": {}
         }"#;
@@ -97,13 +107,18 @@ mod tests {
     #[test]
     fn test_build_graph_includes_all_manifest_types() {
         let json = r#"{
-            "nodes": {"model.test.m": {"unique_id":"model.test.m","name":"m","resource_type":"model","package_name":"test"}},
-            "sources": {"source.test.raw.tbl": {"unique_id":"source.test.raw.tbl","source_name":"raw","name":"tbl","package_name":"test"}},
-            "exposures": {"exposure.test.e": {"unique_id":"exposure.test.e","name":"e"}},
-            "metrics": {"metric.test.met": {"unique_id":"metric.test.met","name":"met"}},
-            "semantic_models": {"semantic_model.test.sm": {"unique_id":"semantic_model.test.sm","name":"sm"}},
-            "saved_queries": {"saved_query.test.sq": {"unique_id":"saved_query.test.sq","name":"sq"}},
-            "unit_tests": {"unit_test.test.ut": {"unique_id":"unit_test.test.ut","name":"ut"}}
+            "nodes": {"model.test.m": {
+                "unique_id":"model.test.m","name":"m","resource_type":"model","package_name":"test",
+                "path":"m.sql","original_file_path":"models/m.sql","schema":"test","alias":"m",
+                "fqn":["test", "m"],
+                "checksum":{"name":"sha256","checksum":"abc"}
+            }},
+            "sources": {"source.test.raw.tbl": {"unique_id":"source.test.raw.tbl","source_name":"raw","name":"tbl","package_name":"test","original_file_path":"sources.yml","resource_type":"source","schema":"test","identifier":"tbl","path":"sources.yml","fqn":["test", "raw", "tbl"]}},
+            "exposures": {"exposure.test.e": {"unique_id":"exposure.test.e","name":"e","resource_type":"exposure","type":"dashboard","owner":{"email":"e","name":"n"},"package_name":"test","path":"e.yml","original_file_path":"models/e.yml","description":"desc","fqn":["test", "e"]}},
+            "metrics": {"metric.test.met": {"unique_id":"metric.test.met","name":"met","resource_type":"metric","type":"simple","label":"Metric","package_name":"test","path":"m.yml","original_file_path":"models/m.yml","description":"desc","fqn":["test", "met"]}},
+            "semantic_models": {"semantic_model.test.sm": {"unique_id":"semantic_model.test.sm","name":"sm","resource_type":"semantic_model","package_name":"test","path":"sm.yml","original_file_path":"models/sm.yml","model":"ref('m')","description":"desc"}},
+            "saved_queries": {"saved_query.test.sq": {"unique_id":"saved_query.test.sq","name":"sq","resource_type":"saved_query","package_name":"test","path":"sq.yml","original_file_path":"models/sq.yml","label":"SQ","description":"desc"}},
+            "unit_tests": {"unit_test.test.ut": {"unique_id":"unit_test.test.ut","name":"ut","resource_type":"unit_test","package_name":"test","path":"ut.yml","original_file_path":"tests/ut.yml","model":"ref('m')","schema":"test"}}
         }"#;
         let manifest = OxideManifest::from_json_str(json).unwrap();
         let graph = build_graph_from_manifest(&manifest);
@@ -114,10 +129,15 @@ mod tests {
     fn test_build_graph_with_source_dependency() {
         let json = r#"{
             "nodes": {
-                "model.test.m": {"unique_id":"model.test.m","name":"m","resource_type":"model","package_name":"test",
-                                 "depends_on":{"nodes":["source.test.raw.tbl"]}}
+                "model.test.m": {
+                    "unique_id":"model.test.m","name":"m","resource_type":"model","package_name":"test",
+                    "path":"m.sql","original_file_path":"models/m.sql","schema":"test","alias":"m",
+                    "fqn":["test", "m"],
+                    "checksum":{"name":"sha256","checksum":"abc"},
+                    "depends_on":{"nodes":["source.test.raw.tbl"]}
+                }
             },
-            "sources": {"source.test.raw.tbl": {"unique_id":"source.test.raw.tbl","source_name":"raw","name":"tbl","package_name":"test"}}
+            "sources": {"source.test.raw.tbl": {"unique_id":"source.test.raw.tbl","source_name":"raw","name":"tbl","package_name":"test","original_file_path":"sources.yml","resource_type":"source","schema":"test","identifier":"tbl","path":"sources.yml","fqn":["test", "raw", "tbl"]}}
         }"#;
         let manifest = OxideManifest::from_json_str(json).unwrap();
         let graph = build_graph_from_manifest(&manifest);
@@ -130,9 +150,16 @@ mod tests {
     #[test]
     fn test_build_graph_with_exposure_dependencies() {
         let json = r#"{
-            "nodes": {"model.test.m": {"unique_id":"model.test.m","name":"m","resource_type":"model","package_name":"test"}},
+            "nodes": {
+                "model.test.m": {
+                    "unique_id":"model.test.m","name":"m","resource_type":"model","package_name":"test",
+                    "path":"m.sql","original_file_path":"models/m.sql","schema":"test","alias":"m",
+                    "fqn":["test", "m"],
+                    "checksum":{"name":"sha256","checksum":"abc"}
+                }
+            },
             "sources": {},
-            "exposures": {"exposure.test.e": {"unique_id":"exposure.test.e","name":"e","depends_on":{"nodes":["model.test.m"]}}}
+            "exposures": {"exposure.test.e": {"unique_id":"exposure.test.e","name":"e","resource_type":"exposure","type":"dashboard","owner":{"email":"e","name":"n"},"package_name":"test","path":"e.yml","original_file_path":"models/e.yml","description":"desc","fqn":["test", "e"],"depends_on":{"nodes":["model.test.m"]}}}
         }"#;
         let manifest = OxideManifest::from_json_str(json).unwrap();
         let graph = build_graph_from_manifest(&manifest);

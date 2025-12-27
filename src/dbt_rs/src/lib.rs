@@ -1,12 +1,17 @@
 mod data_layer;
 mod graph;
-mod manifest;
+pub mod manifest;
+#[cfg(test)]
+mod tests;
 
 #[cfg(feature = "extension-module")]
 mod py_graph;
 
 #[cfg(feature = "extension-module")]
 mod py_manifest;
+
+#[cfg(feature = "extension-module")]
+pub mod py_manifest_builder;
 
 #[cfg(feature = "extension-module")]
 mod py_data_layer;
@@ -33,6 +38,7 @@ fn dbt_rs(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<DbtGraph>()?;
 
     py_manifest::register_manifest_module(m)?;
+    py_manifest_builder::register(m)?;
     py_data_layer::register_data_layer_module(m)?;
 
     Ok(())

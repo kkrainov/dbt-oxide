@@ -391,8 +391,32 @@ def replace_config(n, **kwargs):
     )
 
 
-def make_manifest(nodes=[], sources=[], macros=[], docs=[]) -> Manifest:
-    return Manifest(
+def make_manifest(nodes=[], sources=[], macros=[], docs=[]):
+    """Create manifest using get_manifest_class() factory.
+    
+    Respects DBT_USE_RUST_MANIFEST environment variable.
+    Falls back to Python Manifest if Mock objects are detected.
+    """
+    from dbt.contracts.graph import get_manifest_class
+    from dbt.contracts.graph.manifest import Manifest
+    from unittest.mock import MagicMock
+    
+    ManifestClass = get_manifest_class()
+    
+    # If we have Mock objects, use Python Manifest (it handles them natively)
+    # OxideManifest uses depythonize which doesn't work with Mocks
+    has_mocks = any(
+        isinstance(item, MagicMock)
+        for collection in [nodes, sources, macros, docs]
+        for item in collection
+    )
+    
+    if has_mocks and ManifestClass.__name__ == "OxideManifest":
+        # Fall back to Python Manifest for tests using Mocks
+        ManifestClass = Manifest
+    
+    # Both OxideManifest and Python Manifest now support same constructor API!
+    return ManifestClass(
         nodes={n.unique_id: n for n in nodes},
         macros={m.unique_id: m for m in macros},
         sources={s.unique_id: s for s in sources},

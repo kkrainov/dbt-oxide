@@ -93,6 +93,7 @@ Consult these for the "how" when implementing a phase.
   - `uv run ruff format core/dbt` - Format code (CI enforces this)
   - `uv run mypy core/dbt` - Type checking (optional, IDE integrated)
   - `pre-commit run --all-files` - Run all pre-commit hooks locally
+  - **Imports:** Always place imports at the module level (top of file). Do NOT import inside functions or methods. Use `TYPE_CHECKING` for type-only imports to avoid circular dependencies.
 
 
 ## Rust Testing Strategy

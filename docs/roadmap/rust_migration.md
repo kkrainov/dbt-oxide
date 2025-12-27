@@ -14,6 +14,8 @@ This roadmap provides an overview of the migration project. For detailed executi
 |-------|---------------|
 | Phase 1: Graph Engine | [phase_1_graph_engine.md](../plans/phase_1_graph_engine.md) |
 | Phase 2: Zero-Copy Manifest | [phase_2_zero_copy_manifest.md](../plans/phase_2_zero_copy_manifest.md) |
+| Phase 3.1: minijinja Integration | [phase_3_1_minijinja_integration.md](../plans/phase_3_1_minijinja_integration.md) |
+| Phase 3.1.1: Rust Manifest Serialization | [phase_3_1_1_rust_manifest_serialization.md](../plans/phase_3_1_1_rust_manifest_serialization.md) |
 
 > [!TIP]
 > The `docs/plans/` directory contains granular implementation plans with code samples, test strategies, and verification checklists for each phase.
@@ -295,125 +297,69 @@ def get_rendered(..., capture_macros: bool = False, ...):
 
 ---
 
-## Phase 3.1.1: Rust-Native Macro Tracking (capture_macros=True)
+## Phase 3.1.1: Rust-Native Manifest Serialization
 
 **Status:** Planned (Post-Phase 3.1)  
-**Objective:** Migrate `capture_macros=True` path from Jinja2 to Rust minijinja with native macro dependency tracking.  
-**Performance Target:** 3-5x faster `dbt parse` (~18s → 4-6s for 2000 models).  
-**Risk:** Medium-High (requires AST analysis in Rust)  
+**Objective:** Eliminate Python JSON serialization by having Rust serialize the manifest directly.  
+**Performance Target:** 65% faster `dbt parse` (~7.5s → 2.6s for 2000 models).  
+**Risk:** Medium  
+**Detailed Plan:** [phase_3_1_1_rust_manifest_serialization.md](../plans/phase_3_1_1_rust_manifest_serialization.md)
 
 > [!IMPORTANT]
-> **Profiling Evidence (December 2025):** Template rendering during `dbt compile` only takes 0.001s (17 calls).
-> The **real bottleneck is `dbt parse`** which uses `capture_macros=True` (Jinja2) for 2000+ templates.
-> Thread synchronization (32.8s) is the largest overhead, but Jinja2 rendering is next.
+> **Profiling Evidence (December 2025):** JSON serialization is **36% of total `dbt parse` time**.
+> - `json.dump()`: 2.73s (36%)
+> - `to_resource()`: 1.71s (23%)
+> - `_sync_manifest_to_rust`: 1.38s (18%)
+> - **Total serialization overhead: 4.4s (59%)**
 
 ### Why This Phase?
 
-| Command | capture_macros | Engine | Template Renders | 
-|---------|---------------|--------|------------------|
-| `dbt parse` | **True** | Jinja2 (slow) | **2000+** |
-| `dbt compile` | False | minijinja (fast) | 17 |
+| Component | Current Time | Bottleneck? |
+|-----------|--------------|-------------|
+| JSON serialization | 2.7s | **YES** |
+| Node conversion | 1.7s | **YES** |
+| Rust sync (redundant) | 1.4s | **YES** |
+| Jinja rendering | 0.1s | No |
 
-Phase 3.1 optimizes compile, but **parse is 10x more template-intensive**.
+Phase 3.1 optimized Jinja, but **JSON serialization is the true bottleneck**.
 
-### Technical Challenge
+### Implementation Summary
 
-`capture_macros=True` uses Jinja2's custom `Undefined` class to track which macros are called:
+Full schema parity approach - implement complete Rust structs matching Python dataclasses:
 
-```python
-# Current Jinja2 approach
-class CaptureUndefined(jinja2.Undefined):
-    def _capture(self, name):
-        # Records that macro 'name' was referenced
-        self._captured_calls.add(name)
-```
+| Phase | Tasks |
+|-------|-------|
+| C.1: Schema Expansion | 30+ Rust structs (all 46 node fields, 29 config fields) |
+| C.2: Serialization | `to_json_str()`, parent/child maps, datetime handling |
+| C.3: PyO3 Bindings | `write_manifest_to_file()`, `get_manifest_json()` |
+| C.4: Python Integration | Update `Manifest.write()`, remove redundant sync |
+| C.5: Verification | 75 tests pass, byte-for-byte comparison |
 
-minijinja doesn't support custom Undefined behavior.
-
-### Proposed Solution: Rust AST Analysis
-
-Instead of runtime capture, use **static AST analysis** on the template:
+### Key Structs to Implement
 
 ```rust
-// src/dbt_rs/src/macro_tracker.rs
-use minijinja::ast;
+// Core components
+OxideFileHash, OxideDocs, OxideContract, OxideColumnInfo, OxideRefArgs
 
-pub fn extract_macro_dependencies(template: &str) -> Vec<String> {
-    // Parse template into AST
-    let ast = minijinja::parse(template)?;
-    
-    // Walk AST looking for function calls: ref(), source(), config(), etc.
-    let mut dependencies = Vec::new();
-    walk_ast(&ast, &mut |node| {
-        if let AstNode::Call { name, .. } = node {
-            if is_tracked_function(name) {
-                dependencies.push(name.to_string());
-            }
-        }
-    });
-    
-    dependencies
-}
+// Config types  
+OxideNodeConfig (29 fields), OxideModelConfig, OxideTestConfig, OxideSeedConfig
 
-fn is_tracked_function(name: &str) -> bool {
-    matches!(name, "ref" | "source" | "config" | "this" | "var")
-}
+// Node types (full 46 fields)
+OxideModel, OxideSeed, OxideSnapshot, OxideGenericTest, OxideAnalysis
+
+// Resource types
+OxideSource, OxideMacro, OxideExposure, OxideMetric, OxideSemanticModel
 ```
-
-### Implementation Steps
-
-1. **Rust AST Walker:**
-   - [ ] Add `minijinja` AST access (may need fork or feature flag)
-   - [ ] Implement `extract_macro_dependencies()` function
-   - [ ] Handle nested calls and block expressions
-
-2. **Hybrid Render + Track:**
-   - [ ] Create `render_with_tracking(template, ctx) -> (rendered, deps)`
-   - [ ] Return rendered string AND dependency list
-   - [ ] Python receives both in single call
-
-3. **Parser Integration:**
-   - [ ] Modify `render_with_context()` to use Rust tracking
-   - [ ] Update `depends_on` population from Rust deps
-   - [ ] Maintain backward compatibility
-
-4. **Edge Case Handling:**
-   - [ ] Dynamic macro names (`{{ macros[var] }}`)
-   - [ ] Conditional macro calls (`{% if x %}{{ ref(...) }}{% endif %}`)
-   - [ ] For loops with macro calls
-
-### Alternative: Regex-Based Pre-Scan
-
-If AST analysis is too complex, use regex pre-scan (less accurate but simpler):
-
-```python
-import re
-
-REF_PATTERN = re.compile(r'{{\s*ref\s*\([\'"]([^\'"]+)[\'"]\s*\)')
-SOURCE_PATTERN = re.compile(r'{{\s*source\s*\([\'"]([^\'"]+)[\'"]\s*,')
-
-def extract_deps_fast(template: str) -> List[str]:
-    refs = REF_PATTERN.findall(template)
-    sources = SOURCE_PATTERN.findall(template)
-    return refs + sources
-```
-
-### Verification
-
-- [ ] All Python unit tests pass unchanged
-- [ ] `dbt parse` produces identical manifest
-- [ ] Dependency graph matches Jinja2 baseline
-- [ ] Performance benchmark shows improvement
 
 ### Checklist
 
-- [ ] Research minijinja AST access
-- [ ] Implement Rust `extract_macro_dependencies()`
-- [ ] Create PyO3 binding `dbt_rs.render_with_tracking()`
-- [ ] Modify `get_rendered()` for tracking path
-- [ ] Update `parser/base.py` to use Rust tracking
-- [ ] Add comprehensive tests for edge cases
-- [ ] Performance benchmark `dbt parse`
+- [ ] C.1: Add all Rust structs matching Python dataclasses
+- [ ] C.2: Implement `OxideManifest::to_json_str()` with serde
+- [ ] C.3: Add `write_manifest_to_file()` PyO3 binding
+- [ ] C.4: Update `Manifest.write()` to call Rust
+- [ ] C.4: Remove redundant `_sync_manifest_to_rust()` 
+- [ ] C.5: Verify 75 existing manifest tests pass
+- [ ] C.5: Benchmark < 500ms for 2000 nodes
 
 ## Phase 3.2: Rust Node Construction 
 
